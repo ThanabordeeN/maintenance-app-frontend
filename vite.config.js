@@ -8,6 +8,18 @@ export default defineConfig({
   server: {
     port: 5173,
     host: true,
-    allowedHosts: true
+    allowedHosts: true,
+    watch: {
+      usePolling: true,
+      interval: 1000
+    },
+    // Proxy API requests to maintenance backend
+    proxy: {
+      '/maintenance/api': {
+        target: 'http://maintenance-backend-dev:3002',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/maintenance\/api/, '/api')
+      }
+    }
   }
 })

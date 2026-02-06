@@ -1,7 +1,8 @@
-import { X, Clock, User, Wrench, CheckCircle, Calendar, DollarSign, AlertTriangle, Zap, Play, Pause, XCircle, RotateCcw, ArrowRight, Package, TrendingUp, History, MapPin, Tag, Briefcase, Camera } from 'lucide-react';
+import { X, Clock, User, Wrench, CheckCircle, Calendar, DollarSign, AlertTriangle, Zap, Play, Pause, XCircle, RotateCcw, ArrowRight, Package, TrendingUp, History, MapPin, Tag, Briefcase, Camera, ClipboardCheck } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { maintenanceAPI, getImageUrl } from '../services/api';
 import StatusUpdateModal from './StatusUpdateModal';
+import ChecklistModal from './ChecklistModal';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/Card';
 import Button from './ui/Button';
 import Badge from './ui/Badge';
@@ -11,6 +12,7 @@ const MaintenanceDetail = ({ recordId, onClose, userId }) => {
   const [loading, setLoading] = useState(true);
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [showUpdateForm, setShowUpdateForm] = useState(false);
+  const [showChecklistModal, setShowChecklistModal] = useState(false);
   const [updateNotes, setUpdateNotes] = useState('');
   const [updateImages, setUpdateImages] = useState([]);
   const [updateImagePreviews, setUpdateImagePreviews] = useState([]);
@@ -296,6 +298,15 @@ const MaintenanceDetail = ({ recordId, onClose, userId }) => {
                   {showUpdateForm ? 'ยกเลิก' : 'อัปเดตงาน'}
                 </Button>
               )}
+              {/* Checklist Button */}
+              <Button
+                onClick={() => setShowChecklistModal(true)}
+                variant="ghost"
+                className="px-6 h-12 rounded-2xl border border-green-500/30 text-green-400 font-bold hover:bg-green-500/10 transition-all"
+              >
+                <ClipboardCheck size={18} className="mr-2" />
+                Checklist
+              </Button>
             </div>
           )}
  
@@ -620,126 +631,121 @@ const MaintenanceDetail = ({ recordId, onClose, userId }) => {
       )}
     </div>
 
-      {/* Progress Update Modal */}
+      {/* Progress Update Modal - Full Screen on Mobile */}
       {showUpdateForm && (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center p-0 sm:p-4 animate-in fade-in duration-300">
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setShowUpdateForm(false)} />
-          <div className="relative bg-gray-900 w-full max-w-lg h-full sm:h-auto sm:max-h-[90vh] sm:rounded-3xl border border-gray-800 shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-300">
-            {/* Modal Header */}
-            <div className="p-6 border-b border-gray-800 flex items-center justify-between bg-gray-900/50">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-blue-500/10 text-blue-400 rounded-xl">
-                  <TrendingUp size={24} />
-                </div>
-                <div>
-                  <h3 className="text-xl font-black text-white">อัปเดตความคืบหน้า</h3>
-                  <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">Progress Update</p>
-                </div>
-              </div>
+        <div className="fixed inset-0 z-[80] flex flex-col bg-black animate-in fade-in duration-200">
+          {/* Header */}
+          <header className="flex-none bg-zinc-950 border-b border-zinc-800/50">
+            <div className="flex items-center h-16 px-4">
               <button 
                 onClick={() => setShowUpdateForm(false)}
-                className="p-2 rounded-xl bg-gray-800 text-white hover:bg-gray-700 transition-all border border-gray-700"
+                className="w-12 h-12 flex items-center justify-center rounded-xl bg-zinc-900 hover:bg-zinc-800 active:scale-95 transition-all"
               >
-                <X size={20} />
+                <X size={24} className="text-zinc-400" />
               </button>
+              <div className="flex-1 ml-4">
+                <h1 className="text-lg font-semibold text-white">อัปเดตความคืบหน้า</h1>
+                <p className="text-sm text-zinc-500">{record.work_order}</p>
+              </div>
+            </div>
+          </header>
+
+          {/* Form Content */}
+          <form onSubmit={handleProgressUpdate} className="flex-1 overflow-y-auto p-4 pb-32 space-y-5">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-zinc-300">
+                ข้อความอัปเดต <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                value={updateNotes}
+                onChange={(e) => setUpdateNotes(e.target.value)}
+                placeholder="พิมพ์ความคืบหน้าของงาน เช่น กำลังรื้อสายพาน, ตรวจพบลูกปืนแตกเพิ่มเติม..."
+                className="w-full h-40 px-4 py-3 bg-zinc-900 border-2 border-zinc-800 rounded-xl text-white text-base focus:outline-none focus:border-sky-500 resize-none"
+                required
+                autoFocus
+              />
             </div>
 
-            {/* Modal Body */}
-            <form onSubmit={handleProgressUpdate} className="flex-1 overflow-y-auto p-6 space-y-6">
-              <div className="space-y-3">
-                <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] ml-1">ข้อความอัปเดต</label>
-                <textarea
-                  value={updateNotes}
-                  onChange={(e) => setUpdateNotes(e.target.value)}
-                  placeholder="พิมพ์ความคืบหน้าของงาน เช่น กำลังรื้อสายพาน, ตรวจพบลูกปืนแตกเพิ่มเติม..."
-                  className="w-full bg-gray-950 border border-gray-800 rounded-2xl p-5 text-white focus:ring-2 focus:ring-blue-500 outline-none min-h-[160px] text-base leading-relaxed resize-none shadow-inner"
-                  required
-                  autoFocus
-                />
-              </div>
-
-              <div className="space-y-3">
-                <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] ml-1">แนบรูปภาพ (ถ้ามี)</label>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    {updateImagePreviews.map((preview, index) => (
-                      <div key={index} className="relative rounded-2xl overflow-hidden aspect-square border border-gray-800 bg-black group">
-                        <img src={preview} className="w-full h-full object-cover" alt="Preview" />
-                        <button 
-                          type="button"
-                          onClick={() => {
-                            setUpdateImages(prev => prev.filter((_, i) => i !== index));
-                            setUpdateImagePreviews(prev => prev.filter((_, i) => i !== index));
-                          }}
-                          className="absolute top-2 right-2 p-1.5 bg-red-600 text-white rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <X size={14} />
-                        </button>
-                      </div>
-                    ))}
-                    
-                    {updateImages.length < 5 && (
-                      <label className="flex flex-col items-center justify-center gap-2 cursor-pointer bg-gray-800 border-2 border-dashed border-gray-700 hover:border-blue-500/50 hover:bg-gray-800/80 aspect-square rounded-2xl text-gray-400 transition-all group">
-                        <Camera size={24} className="text-gray-500 group-hover:text-blue-400" />
-                        <span className="text-[10px] font-bold uppercase">เพิ่มรูป</span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          multiple
-                          className="hidden"
-                          onChange={(e) => {
-                            const files = Array.from(e.target.files);
-                            const remaining = 5 - updateImages.length;
-                            files.slice(0, remaining).forEach(file => {
-                              setUpdateImages(prev => [...prev, file]);
-                              const reader = new FileReader();
-                              reader.onloadend = () => setUpdateImagePreviews(prev => [...prev, reader.result]);
-                              reader.readAsDataURL(file);
-                            });
-                          }}
-                        />
-                      </label>
-                    )}
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-zinc-400">แนบรูปภาพ</label>
+              
+              <div className="grid grid-cols-4 gap-2">
+                {updateImagePreviews.map((preview, index) => (
+                  <div key={index} className="relative aspect-square rounded-xl overflow-hidden border border-zinc-800 bg-zinc-900">
+                    <img src={preview} className="w-full h-full object-cover" alt="Preview" />
+                    <button 
+                      type="button"
+                      onClick={() => {
+                        setUpdateImages(prev => prev.filter((_, i) => i !== index));
+                        setUpdateImagePreviews(prev => prev.filter((_, i) => i !== index));
+                      }}
+                      className="absolute top-1 right-1 w-6 h-6 rounded-full bg-red-600 flex items-center justify-center"
+                    >
+                      <X size={14} className="text-white" />
+                    </button>
                   </div>
-                  
-                  {updateImages.length > 0 && (
-                     <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider text-center">
-                       {updateImages.length} / 5 Images Selected
-                     </p>
-                  )}
-                </div>
+                ))}
+                
+                {updateImages.length < 5 && (
+                  <label className="aspect-square rounded-xl border-2 border-dashed border-zinc-700 bg-zinc-900/50 flex flex-col items-center justify-center cursor-pointer hover:border-zinc-600 active:scale-95 transition-all">
+                    <Camera size={24} className="text-zinc-500" />
+                    <span className="text-xs text-zinc-500 mt-1">เพิ่ม</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="hidden"
+                      onChange={(e) => {
+                        const files = Array.from(e.target.files);
+                        const remaining = 5 - updateImages.length;
+                        files.slice(0, remaining).forEach(file => {
+                          setUpdateImages(prev => [...prev, file]);
+                          const reader = new FileReader();
+                          reader.onloadend = () => setUpdateImagePreviews(prev => [...prev, reader.result]);
+                          reader.readAsDataURL(file);
+                        });
+                      }}
+                    />
+                  </label>
+                )}
               </div>
+              
+              {updateImages.length > 0 && (
+                <p className="text-xs text-zinc-500">{updateImages.length} / 5 รูป</p>
+              )}
+            </div>
+          </form>
 
-              {/* Action Button */}
-              <div className="pt-4 flex gap-3">
-                <Button
-                  type="button"
-                  onClick={() => setShowUpdateForm(false)}
-                  variant="outline"
-                  className="flex-1 h-16 rounded-2xl font-black text-gray-400 border-gray-800 hover:bg-gray-800"
-                >
-                  ยกเลิก
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={isUpdating || !updateNotes.trim()}
-                  className="flex-[2] bg-blue-600 hover:bg-blue-500 text-white h-16 rounded-2xl font-black text-lg gap-2 shadow-xl shadow-blue-900/40 relative overflow-hidden"
-                >
-                  {isUpdating ? (
-                    <div className="flex items-center gap-2">
-                       <Clock className="animate-spin" size={20} />
-                       กำลังส่ง...
-                    </div>
-                  ) : (
-                    <>
-                      บันทึกข้อมูล
-                      <TrendingUp size={20} />
-                    </>
-                  )}
-                </Button>
-              </div>
-            </form>
-          </div>
+          {/* Footer Actions */}
+          <footer className="fixed bottom-0 left-0 right-0 bg-zinc-950 border-t border-zinc-800/50 p-4 pb-8">
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setShowUpdateForm(false)}
+                className="flex-1 h-14 rounded-xl bg-zinc-800 text-zinc-300 font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
+              >
+                <X size={20} />
+                ยกเลิก
+              </button>
+              <button
+                onClick={handleProgressUpdate}
+                disabled={isUpdating || !updateNotes.trim()}
+                className="flex-[2] h-14 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-semibold flex items-center justify-center gap-2 active:scale-[0.98] transition-all shadow-lg disabled:bg-zinc-700 disabled:cursor-not-allowed"
+              >
+                {isUpdating ? (
+                  <>
+                    <Clock className="animate-spin" size={20} />
+                    กำลังส่ง...
+                  </>
+                ) : (
+                  <>
+                    <TrendingUp size={20} />
+                    บันทึกข้อมูล
+                  </>
+                )}
+              </button>
+            </div>
+          </footer>
         </div>
       )}
 
@@ -750,6 +756,20 @@ const MaintenanceDetail = ({ recordId, onClose, userId }) => {
           userId={userId}
           onClose={() => setShowStatusModal(false)}
           onUpdate={handleStatusUpdate}
+        />
+      )}
+
+      {/* Checklist Modal */}
+      {showChecklistModal && (
+        <ChecklistModal
+          maintenanceRecordId={recordId}
+          equipmentId={record.equipment_id}
+          userId={userId}
+          onClose={() => setShowChecklistModal(false)}
+          onSuccess={() => {
+            setShowChecklistModal(false);
+            fetchRecordDetail();
+          }}
         />
       )}
 

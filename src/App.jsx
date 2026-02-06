@@ -5,9 +5,18 @@ import MaintenanceList from './components/MaintenanceList';
 import MaintenanceForm from './components/MaintenanceForm';
 import UserManagement from './components/UserManagement';
 import EquipmentManagement from './components/EquipmentManagement';
+import UsageLog from './components/UsageLog';
 import Header from './components/Header';
 import Button from './components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './components/ui/Card';
+// New CMMS Components
+import Dashboard from './components/Dashboard';
+import SparePartsManagement from './components/SparePartsManagement';
+import NotificationsCenter from './components/NotificationsCenter';
+import CalendarView from './components/CalendarView';
+import ChecklistManager from './components/ChecklistManager';
+import VendorManagement from './components/VendorManagement';
+import DailyChecklist from './components/DailyChecklist';
 
 function App() {
   const { isLoggedIn, isLoading, profile, error, lineUserId, logout } = useLiff();
@@ -170,6 +179,69 @@ function App() {
               >
                 <ChevronLeft className="w-4 h-4 mr-2" />
                 กลับหน้าหลัก
+              </Button>
+            </Card>
+          )
+        ) : currentView === 'usage' ? (
+          // Usage Log View (All Users)
+          <UsageLog profile={profile} />
+        ) : currentView === 'dashboard' ? (
+          // Dashboard View (All Users)
+          <Dashboard onBack={() => setCurrentView('maintenance')} />
+        ) : currentView === 'spareParts' ? (
+          // Spare Parts Management (Moderator Only)
+          ['admin', 'moderator'].includes(profile.role) ? (
+            <SparePartsManagement onBack={() => setCurrentView('maintenance')} />
+          ) : (
+            <Card className="border-red-900/50 bg-red-950/10 p-8 text-center max-w-2xl mx-auto">
+              <Ban className="w-12 h-12 text-red-500 mx-auto mb-4" />
+              <CardTitle className="text-red-500">คุณไม่มีสิทธิ์เข้าถึงหน้านี้</CardTitle>
+              <CardDescription className="mt-2">เฉพาะผู้ดูแลระบบเท่านั้นที่สามารถจัดการอะไหล่ได้</CardDescription>
+              <Button onClick={() => setCurrentView('maintenance')} variant="outline" className="mt-6">
+                <ChevronLeft className="w-4 h-4 mr-2" />กลับหน้าหลัก
+              </Button>
+            </Card>
+          )
+        ) : currentView === 'notifications' ? (
+          // Notifications Center (All Users)
+          <NotificationsCenter onBack={() => setCurrentView('maintenance')} profile={profile} />
+        ) : currentView === 'calendar' ? (
+          // Calendar View (All Users)
+          <CalendarView 
+            onBack={() => setCurrentView('maintenance')} 
+            onSelectMaintenance={(id) => {
+              // Could navigate to maintenance detail
+              console.log('Selected maintenance:', id);
+            }}
+          />
+        ) : currentView === 'checklists' ? (
+          // Checklist Manager (Moderator Only)
+          ['admin', 'moderator'].includes(profile.role) ? (
+            <ChecklistManager onBack={() => setCurrentView('maintenance')} />
+          ) : (
+            <Card className="border-red-900/50 bg-red-950/10 p-8 text-center max-w-2xl mx-auto">
+              <Ban className="w-12 h-12 text-red-500 mx-auto mb-4" />
+              <CardTitle className="text-red-500">คุณไม่มีสิทธิ์เข้าถึงหน้านี้</CardTitle>
+              <CardDescription className="mt-2">เฉพาะผู้ดูแลระบบเท่านั้นที่สามารถจัดการ Checklists ได้</CardDescription>
+              <Button onClick={() => setCurrentView('maintenance')} variant="outline" className="mt-6">
+                <ChevronLeft className="w-4 h-4 mr-2" />กลับหน้าหลัก
+              </Button>
+            </Card>
+          )
+        ) : currentView === 'dailyChecklist' ? (
+          // Daily Checklist (All Users)
+          <DailyChecklist userId={profile.userId} userName={profile.displayName} />
+        ) : currentView === 'vendors' ? (
+          // Vendor Management (Moderator Only)
+          ['admin', 'moderator'].includes(profile.role) ? (
+            <VendorManagement onBack={() => setCurrentView('maintenance')} />
+          ) : (
+            <Card className="border-red-900/50 bg-red-950/10 p-8 text-center max-w-2xl mx-auto">
+              <Ban className="w-12 h-12 text-red-500 mx-auto mb-4" />
+              <CardTitle className="text-red-500">คุณไม่มีสิทธิ์เข้าถึงหน้านี้</CardTitle>
+              <CardDescription className="mt-2">เฉพาะผู้ดูแลระบบเท่านั้นที่สามารถจัดการผู้ขายได้</CardDescription>
+              <Button onClick={() => setCurrentView('maintenance')} variant="outline" className="mt-6">
+                <ChevronLeft className="w-4 h-4 mr-2" />กลับหน้าหลัก
               </Button>
             </Card>
           )

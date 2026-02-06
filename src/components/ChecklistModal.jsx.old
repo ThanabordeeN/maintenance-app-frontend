@@ -1,0 +1,345 @@
+import { useState, useEffect } from 'react';
+import { X, ClipboardCheck, Check, AlertCircle, Save, ChevronDown, ChevronRight } from 'lucide-react';
+import { checklistsAPI } from '../services/api';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/Card';
+import Button from './ui/Button';
+import Badge from './ui/Badge';
+
+export default function ChecklistModal({ 
+  maintenanceRecordId, 
+  equipmentId, 
+  userId, 
+  onClose, 
+  onSuccess 
+}) {
+  const [templates, setTemplates] = useState([]);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [responses, setResponses] = useState({});
+  const [notes, setNotes] = useState({});
+  const [generalNotes, setGeneralNotes] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [existingResponses, setExistingResponses] = useState([]);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch templates - filter out daily/weekly/monthly (used in Daily Check)
+      const templatesRes = await checklistsAPI.getTemplates();
+      const allTemplates = templatesRes.templates || [];
+      // Only show templates without frequency (maintenance templates)
+      const maintenanceTemplates = allTemplates.filter(t => !t.frequency || t.frequency === 'none');
+      setTemplates(maintenanceTemplates);
+      
+      // Fetch existing responses for this maintenance record
+      if (maintenanceRecordId) {
+        try {
+          const responsesRes = await checklistsAPI.getResponses({ maintenance_record_id: maintenanceRecordId });
+          setExistingResponses(responsesRes.responses || []);
+        } catch (e) {
+          console.log('No existing responses');
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSelectTemplate = (template) => {
+    setSelectedTemplate(template);
+    // Initialize responses for all items
+    const initialResponses = {};
+    const initialNotes = {};
+    (template.items || []).forEach(item => {
+      initialResponses[item.id] = null;
+      initialNotes[item.id] = '';
+    });
+    setResponses(initialResponses);
+    setNotes(initialNotes);
+  };
+
+  const handleResponseChange = (itemId, value) => {
+    setResponses(prev => ({ ...prev, [itemId]: value }));
+  };
+
+  const handleNoteChange = (itemId, value) => {
+    setNotes(prev => ({ ...prev, [itemId]: value }));
+  };
+
+  const handleSubmit = async () => {
+    if (!selectedTemplate) return;
+
+    // Validate required items
+    const requiredItems = (selectedTemplate.items || []).filter(item => item.required);
+    const missingRequired = requiredItems.filter(item => responses[item.id] === null);
+    
+    if (missingRequired.length > 0) {
+      alert(`กรุณากรอกรายการที่จำเป็น: ${missingRequired.map(i => i.description).join(', ')}`);
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const items = (selectedTemplate.items || []).map(item => ({
+        template_item_id: item.id,
+        item_text: item.description,
+        response_value: String(responses[item.id] ?? ''),
+        is_passed: responses[item.id] === true || responses[item.id] === 'pass',
+        notes: notes[item.id] || null
+      }));
+
+      await checklistsAPI.submitResponse({
+        template_id: selectedTemplate.id,
+        maintenance_record_id: maintenanceRecordId,
+        equipment_id: equipmentId,
+        completed_by: userId,
+        notes: generalNotes,
+        items
+      });
+
+      onSuccess?.();
+      onClose();
+    } catch (error) {
+      console.error('Error submitting checklist:', error);
+      alert('เกิดข้อผิดพลาดในการบันทึก Checklist');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const allItemsAnswered = selectedTemplate?.items?.every(item => 
+    !item.required || responses[item.id] !== null
+  );
+
+  const categoryLabels = {
+    'daily': 'ประจำวัน',
+    'weekly': 'ประจำสัปดาห์',
+    'monthly': 'ประจำเดือน',
+    'inspection': 'ตรวจสอบ',
+    'repair': 'ซ่อม',
+  };
+
+  if (loading) {
+    return (
+      <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-md">
+        <Card className="p-12 text-center bg-gray-900 border-gray-800">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-green-500 mx-auto"></div>
+          <p className="mt-4 text-gray-400">กำลังโหลด Checklist...</p>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+      <Card className="max-w-2xl w-full max-h-[90vh] overflow-hidden bg-gray-900 border-gray-800 shadow-2xl">
+        {/* Header */}
+        <CardHeader className="bg-gradient-to-r from-blue-600 to-blue-400 p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <ClipboardCheck className="w-8 h-8 text-white" />
+              <div>
+                <CardTitle className="text-white text-xl">
+                  {selectedTemplate ? selectedTemplate.name : 'เลือก Checklist Template'}
+                </CardTitle>
+                <p className="text-white/70 text-sm">
+                  {selectedTemplate 
+                    ? `${selectedTemplate.items?.length || 0} รายการตรวจ`
+                    : 'เลือกเทมเพลตที่ต้องการใช้'}
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="icon"
+              onClick={onClose}
+              className="bg-black/20 hover:bg-black/30 text-white rounded-xl h-10 w-10"
+            >
+              <X size={20} />
+            </Button>
+          </div>
+        </CardHeader>
+
+        <CardContent className="p-0 overflow-y-auto max-h-[calc(90vh-180px)]">
+          {/* Existing Responses */}
+          {existingResponses.length > 0 && !selectedTemplate && (
+            <div className="p-4 bg-green-500/10 border-b border-green-500/20">
+              <p className="text-green-400 font-medium flex items-center gap-2">
+                <Check size={16} />
+                มี Checklist ที่กรอกแล้ว {existingResponses.length} รายการ
+              </p>
+              <div className="mt-2 space-y-1">
+                {existingResponses.map(resp => (
+                  <div key={resp.id} className="text-sm text-gray-400">
+                    • {resp.template_name} - {new Date(resp.completed_at).toLocaleString('th-TH')}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Template Selection */}
+          {!selectedTemplate ? (
+            <div className="p-4 space-y-3">
+              {templates.length === 0 ? (
+                <div className="text-center py-12 text-gray-500">
+                  <ClipboardCheck size={48} className="mx-auto mb-4 opacity-30" />
+                  <p>ไม่มี Checklist Template</p>
+                  <p className="text-sm">สร้างเทมเพลตก่อนใช้งาน</p>
+                </div>
+              ) : (
+                templates.map(template => (
+                  <div
+                    key={template.id}
+                    onClick={() => handleSelectTemplate(template)}
+                    className="p-4 bg-gray-800/50 rounded-xl border border-gray-700 hover:border-blue-500/50 cursor-pointer transition-all group"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <Badge variant="outline" className="text-xs">
+                            {categoryLabels[template.category] || template.category}
+                          </Badge>
+                        </div>
+                        <h4 className="font-medium text-white group-hover:text-blue-400 transition-colors">
+                          {template.name}
+                        </h4>
+                        {template.description && (
+                          <p className="text-sm text-gray-500 mt-1">{template.description}</p>
+                        )}
+                        <p className="text-xs text-gray-600 mt-2">
+                          {template.items?.length || 0} รายการตรวจ
+                        </p>
+                      </div>
+                      <ChevronRight className="w-5 h-5 text-gray-600 group-hover:text-blue-400" />
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          ) : (
+            /* Checklist Form */
+            <div className="p-4 space-y-4">
+              {/* Back button */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSelectedTemplate(null)}
+                className="text-gray-400 hover:text-white"
+              >
+                ← เลือกเทมเพลตอื่น
+              </Button>
+
+              {/* Items */}
+              {(selectedTemplate.items || []).map((item, index) => (
+                <div 
+                  key={item.id} 
+                  className={`p-4 rounded-xl border transition-all ${
+                    responses[item.id] === true || responses[item.id] === 'pass'
+                      ? 'bg-green-500/10 border-green-500/30'
+                      : responses[item.id] === false || responses[item.id] === 'fail'
+                      ? 'bg-red-500/10 border-red-500/30'
+                      : 'bg-gray-800/50 border-gray-700'
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <span className="w-6 h-6 rounded-full bg-gray-700 text-gray-400 flex items-center justify-center text-xs font-bold shrink-0">
+                      {index + 1}
+                    </span>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="text-white font-medium">{item.description}</p>
+                        {item.required && (
+                          <span className="text-red-400 text-xs">*จำเป็น</span>
+                        )}
+                      </div>
+                      
+                      {/* Response buttons */}
+                      <div className="flex gap-2 mt-3">
+                        <button
+                          type="button"
+                          onClick={() => handleResponseChange(item.id, true)}
+                          className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all ${
+                            responses[item.id] === true
+                              ? 'bg-green-500 text-white'
+                              : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                          }`}
+                        >
+                          <Check size={16} className="inline mr-1" />
+                          ผ่าน
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleResponseChange(item.id, false)}
+                          className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all ${
+                            responses[item.id] === false
+                              ? 'bg-red-500 text-white'
+                              : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                          }`}
+                        >
+                          <X size={16} className="inline mr-1" />
+                          ไม่ผ่าน
+                        </button>
+                      </div>
+
+                      {/* Note input if failed */}
+                      {responses[item.id] === false && (
+                        <input
+                          type="text"
+                          placeholder="หมายเหตุ (ทำไมไม่ผ่าน)"
+                          value={notes[item.id] || ''}
+                          onChange={(e) => handleNoteChange(item.id, e.target.value)}
+                          className="w-full mt-2 px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-red-500"
+                        />
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {/* General notes */}
+              <div className="space-y-2">
+                <label className="text-sm text-gray-400">หมายเหตุเพิ่มเติม</label>
+                <textarea
+                  value={generalNotes}
+                  onChange={(e) => setGeneralNotes(e.target.value)}
+                  placeholder="หมายเหตุทั่วไป..."
+                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 min-h-[80px]"
+                />
+              </div>
+            </div>
+          )}
+        </CardContent>
+
+        {/* Footer with submit */}
+        {selectedTemplate && (
+          <div className="p-4 border-t border-gray-800 bg-gray-900/50">
+            <Button
+              onClick={handleSubmit}
+              disabled={!allItemsAnswered || submitting}
+              className="w-full bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-bold disabled:opacity-50"
+            >
+              {submitting ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                  กำลังบันทึก...
+                </>
+              ) : (
+                <>
+                  <Save size={18} className="mr-2" />
+                  บันทึก Checklist
+                </>
+              )}
+            </Button>
+          </div>
+        )}
+      </Card>
+    </div>
+  );
+}

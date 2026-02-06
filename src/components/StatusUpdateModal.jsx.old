@@ -1,0 +1,498 @@
+import { useState } from 'react';
+import { Play, CheckCircle, Pause, XCircle, RotateCcw, ChevronRight, Check, Camera, X, Plus, ArrowLeft, Loader2 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/Card';
+import Button from './ui/Button';
+
+const StatusUpdateModal = ({ record, onClose, onUpdate, userId }) => {
+  const [selectedStatus, setSelectedStatus] = useState(null);
+  const [formData, setFormData] = useState({
+    notes: '',
+    rootCause: '',
+    actionTaken: '',
+    cancelledReason: '',
+    onHoldReason: ''
+  });
+  const [selectedImages, setSelectedImages] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState({});
+
+  const currentStatusLabel = {
+    pending: 'รอดำเนินการ',
+    in_progress: 'กำลังซ่อม',
+    completed: 'เสร็จสิ้น',
+    cancelled: 'ยกเลิก',
+    on_hold: 'พักงาน',
+    reopened: 'เปิดใหม่'
+  };
+
+  const statusOptions = [
+    {
+      value: 'in_progress',
+      label: record.status === 'on_hold' ? 'ทำงานต่อ' : 'เริ่มงาน',
+      icon: Play,
+      color: 'blue',
+      description: record.status === 'on_hold' ? 'กลับมาดำเนินการซ่อมต่อ' : 'เริ่มดำเนินการซ่อมเครื่องจักร',
+      disabled: record.status === 'in_progress' || record.status === 'completed'
+    },
+    {
+      value: 'on_hold',
+      label: 'พักงาน',
+      icon: Pause,
+      color: 'orange',
+      description: 'พักงานชั่วคราว เช่น รออะไหล่',
+      disabled: record.status === 'pending' || record.status === 'completed' || record.status === 'cancelled',
+      requiresReason: true
+    },
+    {
+      value: 'completed',
+      label: 'เสร็จสิ้น',
+      icon: CheckCircle,
+      color: 'green',
+      description: 'งานซ่อมเสร็จสมบูรณ์',
+      disabled: record.status === 'pending' || record.status === 'completed',
+      requiresDetail: true
+    },
+    {
+      value: 'cancelled',
+      label: 'ยกเลิก',
+      icon: XCircle,
+      color: 'red',
+      description: 'ยกเลิกรายการซ่อมนี้',
+      disabled: record.status === 'completed',
+      requiresReason: true
+    },
+    {
+      value: 'reopened',
+      label: 'เปิดใหม่',
+      icon: RotateCcw,
+      color: 'purple',
+      description: 'เปิดงานใหม่เนื่องจากปัญหายังอยู่',
+      disabled: record.status !== 'completed'
+    }
+  ];
+
+  const getColorClasses = (color, variant = 'default') => {
+    const colors = {
+      blue: {
+        default: 'border-gray-800 hover:border-blue-500/50 hover:bg-blue-500/5',
+        active: 'bg-blue-500/10 border-blue-500 ring-2 ring-blue-500/20',
+        icon: 'bg-blue-500',
+        text: 'text-blue-400'
+      },
+      orange: {
+        default: 'border-gray-800 hover:border-orange-500/50 hover:bg-orange-500/5',
+        active: 'bg-orange-500/10 border-orange-500 ring-2 ring-orange-500/20',
+        icon: 'bg-orange-500',
+        text: 'text-orange-400'
+      },
+      green: {
+        default: 'border-gray-800 hover:border-green-500/50 hover:bg-green-500/5',
+        active: 'bg-green-500/10 border-green-500 ring-2 ring-green-500/20',
+        icon: 'bg-green-500',
+        text: 'text-green-400'
+      },
+      red: {
+        default: 'border-gray-800 hover:border-red-500/50 hover:bg-red-500/5',
+        active: 'bg-red-500/10 border-red-500 ring-2 ring-red-500/20',
+        icon: 'bg-red-500',
+        text: 'text-red-400'
+      },
+      purple: {
+        default: 'border-gray-800 hover:border-purple-500/50 hover:bg-purple-500/5',
+        active: 'bg-purple-500/10 border-purple-500 ring-2 ring-purple-500/20',
+        icon: 'bg-purple-500',
+        text: 'text-purple-400'
+      }
+    };
+    return colors[color]?.[variant] || colors.blue[variant];
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (selectedStatus === 'completed') {
+      if (!formData.rootCause.trim()) newErrors.rootCause = 'กรุณาระบุสาเหตุของปัญหา';
+      if (!formData.actionTaken.trim()) newErrors.actionTaken = 'กรุณาระบุวิธีการแก้ไข';
+      if (selectedImages.length === 0) newErrors.images = 'กรุณาแนบรูปภาพอย่างน้อย 1 รูป';
+    }
+    
+    if (selectedStatus === 'cancelled' && !formData.cancelledReason.trim()) {
+      newErrors.cancelledReason = 'กรุณาระบุเหตุผลในการยกเลิก';
+    }
+    
+    if (selectedStatus === 'on_hold' && !formData.onHoldReason.trim()) {
+      newErrors.onHoldReason = 'กรุณาระบุเหตุผลในการพักงาน';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!validateForm()) return;
+
+    setIsSubmitting(true);
+    
+    try {
+      const formDataToSend = new FormData();
+      formDataToSend.append('status', selectedStatus);
+      formDataToSend.append('userId', String(userId));
+      formDataToSend.append('notes', formData.notes || '');
+      
+      if (selectedStatus === 'completed') {
+        formDataToSend.append('rootCause', formData.rootCause);
+        formDataToSend.append('actionTaken', formData.actionTaken);
+      } else if (selectedStatus === 'cancelled') {
+        formDataToSend.append('cancelledReason', formData.cancelledReason);
+      } else if (selectedStatus === 'on_hold') {
+        formDataToSend.append('onHoldReason', formData.onHoldReason);
+      }
+
+      selectedImages.forEach(img => {
+        formDataToSend.append('images', img);
+      });
+
+      await onUpdate(selectedStatus, formDataToSend);
+      onClose();
+    } catch (error) {
+      alert(error.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleImageAdd = (e) => {
+    const files = Array.from(e.target.files);
+    const remaining = 5 - selectedImages.length;
+    files.slice(0, remaining).forEach(file => {
+      if (file.size > 10 * 1024 * 1024) {
+        alert(`ไฟล์ ${file.name} มีขนาดเกิน 10MB`);
+        return;
+      }
+      setSelectedImages(prev => [...prev, file]);
+      const reader = new FileReader();
+      reader.onloadend = () => setImagePreviews(prev => [...prev, reader.result]);
+      reader.readAsDataURL(file);
+    });
+    // Clear error when image added
+    if (errors.images) setErrors(prev => ({ ...prev, images: null }));
+  };
+
+  const handleImageRemove = (index) => {
+    setSelectedImages(prev => prev.filter((_, i) => i !== index));
+    setImagePreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const selectedOption = statusOptions.find(opt => opt.value === selectedStatus);
+
+  return (
+    <div className="fixed inset-0 z-[60] overflow-y-auto bg-black/90 backdrop-blur-sm">
+      <div className="min-h-full flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <Card className="w-full sm:max-w-2xl border-gray-800 shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-300 rounded-none sm:rounded-3xl overflow-hidden bg-gray-950">
+        
+          {/* Header */}
+          <CardHeader className="bg-gradient-to-r from-gray-900 to-gray-800 border-b border-gray-800 py-4 px-5">
+            <div className="flex justify-between items-start gap-4">
+              <div className="flex items-center gap-3">
+                {selectedStatus && (
+                  <button
+                    onClick={() => setSelectedStatus(null)}
+                    className="p-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white transition-all"
+                  >
+                    <ArrowLeft size={20} />
+                  </button>
+                )}
+                <div>
+                  <CardTitle className="text-xl font-bold text-white">
+                    {selectedStatus ? 'ยืนยันการเปลี่ยนสถานะ' : 'อัปเดตสถานะงาน'}
+                  </CardTitle>
+                  <CardDescription className="text-gray-400 mt-1 flex items-center gap-2 flex-wrap">
+                    <span className="font-mono text-sm">{record.work_order}</span>
+                    <span className="text-gray-600">•</span>
+                    <span>{record.equipment_name}</span>
+                  </CardDescription>
+                </div>
+              </div>
+              <button
+                onClick={onClose}
+                className="p-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-500 hover:text-white transition-all"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Current Status Badge */}
+            <div className="mt-4 flex items-center gap-2">
+              <span className="text-xs text-gray-500 font-medium">สถานะปัจจุบัน:</span>
+              <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                record.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
+                record.status === 'in_progress' ? 'bg-blue-500/20 text-blue-400' :
+                record.status === 'completed' ? 'bg-green-500/20 text-green-400' :
+                record.status === 'cancelled' ? 'bg-red-500/20 text-red-400' :
+                record.status === 'on_hold' ? 'bg-orange-500/20 text-orange-400' :
+                'bg-gray-500/20 text-gray-400'
+              }`}>
+                {currentStatusLabel[record.status] || record.status}
+              </span>
+            </div>
+          </CardHeader>
+
+          <CardContent className="p-5 sm:p-6">
+            {!selectedStatus ? (
+              /* Step 1: Status Selection */
+              <div className="space-y-4 animate-in fade-in duration-300">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-8 h-8 rounded-full bg-gray-800 text-gray-300 flex items-center justify-center font-bold text-sm border border-gray-700">1</div>
+                  <p className="text-sm font-bold text-gray-300">เลือกสถานะใหม่</p>
+                </div>
+                
+                <div className="grid gap-3">
+                  {statusOptions.map((option) => {
+                    const Icon = option.icon;
+                    const canUse = !option.disabled;
+                    return (
+                      <button
+                        key={option.value}
+                        onClick={() => canUse && setSelectedStatus(option.value)}
+                        disabled={!canUse}
+                        className={`w-full p-4 rounded-2xl border-2 transition-all text-left flex items-center gap-4 group bg-gray-900 ${
+                          !canUse
+                            ? 'border-gray-800/50 opacity-30 cursor-not-allowed'
+                            : getColorClasses(option.color, 'default')
+                        }`}
+                      >
+                        <div className={`p-3 rounded-xl text-white shadow-lg ${getColorClasses(option.color, 'icon')} ${
+                          canUse ? 'group-hover:scale-110' : ''
+                        } transition-transform`}>
+                          <Icon size={24} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-white text-lg">{option.label}</span>
+                            {canUse && <ChevronRight size={20} className="text-gray-600 group-hover:text-white transition-colors" />}
+                          </div>
+                          <p className="text-sm text-gray-500 mt-0.5">{option.description}</p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              /* Step 2: Form */
+              <form onSubmit={handleSubmit} className="space-y-5 animate-in fade-in slide-in-from-right-4 duration-300">
+                {/* Selected Status Card */}
+                <div className={`rounded-2xl p-4 border-2 flex items-center gap-4 ${getColorClasses(selectedOption?.color, 'active')}`}>
+                  <div className={`p-3 rounded-xl text-white shadow-lg ${getColorClasses(selectedOption?.color, 'icon')}`}>
+                    {selectedOption && <selectedOption.icon size={24} />}
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-gray-400">กำลังจะเปลี่ยนสถานะเป็น</p>
+                    <p className={`text-xl font-bold ${getColorClasses(selectedOption?.color, 'text')}`}>{selectedOption?.label}</p>
+                  </div>
+                </div>
+
+                {/* Dynamic Form Fields */}
+                <div className="space-y-4">
+                  
+                  {/* Completed Status Fields */}
+                  {selectedStatus === 'completed' && (
+                    <>
+                      <div className="space-y-2">
+                        <label className="text-sm font-bold text-gray-300 flex items-center gap-2">
+                          🔍 สาเหตุของปัญหา <span className="text-red-500">*</span>
+                        </label>
+                        <textarea
+                          value={formData.rootCause}
+                          onChange={(e) => {
+                            setFormData({ ...formData, rootCause: e.target.value });
+                            if (errors.rootCause) setErrors(prev => ({ ...prev, rootCause: null }));
+                          }}
+                          className={`w-full px-4 py-3 bg-gray-900 border-2 rounded-xl text-white focus:outline-none transition-all min-h-[100px] text-sm resize-none ${
+                            errors.rootCause 
+                              ? 'border-red-500 focus:ring-2 focus:ring-red-500/20' 
+                              : 'border-gray-800 focus:border-green-500 focus:ring-2 focus:ring-green-500/20'
+                          }`}
+                          placeholder="อธิบายสาเหตุของปัญหาให้ชัดเจน..."
+                        />
+                        {errors.rootCause && <p className="text-xs text-red-400 flex items-center gap-1"><XCircle size={12} /> {errors.rootCause}</p>}
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <label className="text-sm font-bold text-gray-300 flex items-center gap-2">
+                          🔧 วิธีการแก้ไข <span className="text-red-500">*</span>
+                        </label>
+                        <textarea
+                          value={formData.actionTaken}
+                          onChange={(e) => {
+                            setFormData({ ...formData, actionTaken: e.target.value });
+                            if (errors.actionTaken) setErrors(prev => ({ ...prev, actionTaken: null }));
+                          }}
+                          className={`w-full px-4 py-3 bg-gray-900 border-2 rounded-xl text-white focus:outline-none transition-all min-h-[100px] text-sm resize-none ${
+                            errors.actionTaken 
+                              ? 'border-red-500 focus:ring-2 focus:ring-red-500/20' 
+                              : 'border-gray-800 focus:border-green-500 focus:ring-2 focus:ring-green-500/20'
+                          }`}
+                          placeholder="อธิบายขั้นตอนการแก้ไขและอะไหล่ที่ใช้..."
+                        />
+                        {errors.actionTaken && <p className="text-xs text-red-400 flex items-center gap-1"><XCircle size={12} /> {errors.actionTaken}</p>}
+                      </div>
+                    </>
+                  )}
+
+                  {/* Cancelled Status Field */}
+                  {selectedStatus === 'cancelled' && (
+                    <div className="space-y-2">
+                      <label className="text-sm font-bold text-red-400 flex items-center gap-2">
+                        <XCircle size={16} /> เหตุผลในการยกเลิก <span className="text-red-500">*</span>
+                      </label>
+                      <textarea
+                        value={formData.cancelledReason}
+                        onChange={(e) => {
+                          setFormData({ ...formData, cancelledReason: e.target.value });
+                          if (errors.cancelledReason) setErrors(prev => ({ ...prev, cancelledReason: null }));
+                        }}
+                        className={`w-full px-4 py-3 bg-gray-900 border-2 rounded-xl text-white focus:outline-none transition-all min-h-[100px] text-sm resize-none ${
+                          errors.cancelledReason 
+                            ? 'border-red-500 focus:ring-2 focus:ring-red-500/20' 
+                            : 'border-red-900/30 focus:border-red-500 focus:ring-2 focus:ring-red-500/20'
+                        }`}
+                        placeholder="ระบุเหตุผลที่ขอยกเลิกงานนี้..."
+                      />
+                      {errors.cancelledReason && <p className="text-xs text-red-400 flex items-center gap-1"><XCircle size={12} /> {errors.cancelledReason}</p>}
+                    </div>
+                  )}
+
+                  {/* On Hold Status Field */}
+                  {selectedStatus === 'on_hold' && (
+                    <div className="space-y-2">
+                      <label className="text-sm font-bold text-orange-400 flex items-center gap-2">
+                        <Pause size={16} /> เหตุผลในการพักงาน <span className="text-red-500">*</span>
+                      </label>
+                      <textarea
+                        value={formData.onHoldReason}
+                        onChange={(e) => {
+                          setFormData({ ...formData, onHoldReason: e.target.value });
+                          if (errors.onHoldReason) setErrors(prev => ({ ...prev, onHoldReason: null }));
+                        }}
+                        className={`w-full px-4 py-3 bg-gray-900 border-2 rounded-xl text-white focus:outline-none transition-all min-h-[100px] text-sm resize-none ${
+                          errors.onHoldReason 
+                            ? 'border-red-500 focus:ring-2 focus:ring-red-500/20' 
+                            : 'border-orange-900/30 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20'
+                        }`}
+                        placeholder="เช่น รออะไหล่ หรือ รอทีมผู้เชี่ยวชาญ..."
+                      />
+                      {errors.onHoldReason && <p className="text-xs text-red-400 flex items-center gap-1"><XCircle size={12} /> {errors.onHoldReason}</p>}
+                    </div>
+                  )}
+
+                  {/* Notes Field (always shown) */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-gray-400 flex items-center gap-2">
+                      📝 หมายเหตุเพิ่มเติม
+                    </label>
+                    <textarea
+                      value={formData.notes}
+                      onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                      className="w-full px-4 py-3 bg-gray-900 border-2 border-gray-800 rounded-xl text-white focus:outline-none focus:border-gray-600 focus:ring-2 focus:ring-gray-700/20 transition-all min-h-[80px] text-sm resize-none"
+                      placeholder="รายละเอียดอื่นๆ (ถ้ามี)..."
+                    />
+                  </div>
+
+                  {/* Image Upload */}
+                  <div className="space-y-3">
+                    <label className={`text-sm font-bold flex items-center gap-2 ${
+                      errors.images ? 'text-red-400' : 'text-gray-400'
+                    }`}>
+                      <Camera size={16} className={selectedStatus === 'completed' ? 'text-green-400' : 'text-blue-400'} />
+                      แนบรูปภาพ {selectedStatus === 'completed' && <span className="text-red-500">* (จำเป็น)</span>}
+                    </label>
+                    
+                    <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+                      {imagePreviews.map((preview, index) => (
+                        <div key={index} className="relative aspect-square rounded-xl overflow-hidden border-2 border-gray-800 bg-black group">
+                          <img src={preview} className="w-full h-full object-cover" alt="Preview" />
+                          <button 
+                            type="button"
+                            onClick={() => handleImageRemove(index)}
+                            className="absolute top-1 right-1 p-1.5 bg-red-600 text-white rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X size={12} />
+                          </button>
+                        </div>
+                      ))}
+                      
+                      {selectedImages.length < 5 && (
+                        <label className={`flex flex-col items-center justify-center gap-1 cursor-pointer bg-gray-900 border-2 border-dashed rounded-xl aspect-square transition-all group ${
+                          errors.images 
+                            ? 'border-red-500/50 hover:border-red-500' 
+                            : 'border-gray-800 hover:border-blue-500/50 hover:bg-gray-800/80'
+                        }`}>
+                          <Plus size={24} className={`group-hover:scale-110 transition-transform ${errors.images ? 'text-red-400' : 'text-gray-500'}`} />
+                          <span className={`text-xs font-bold ${errors.images ? 'text-red-400' : 'text-gray-500'}`}>เพิ่มรูป</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            className="hidden"
+                            onChange={handleImageAdd}
+                          />
+                        </label>
+                      )}
+                    </div>
+                    
+                    {errors.images && <p className="text-xs text-red-400 flex items-center gap-1"><XCircle size={12} /> {errors.images}</p>}
+                    
+                    {selectedImages.length > 0 && (
+                      <p className="text-xs text-gray-500 font-bold">
+                        {selectedImages.length} / 5 รูปที่เลือก
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-4 border-t border-gray-800">
+                  <Button
+                    type="button"
+                    onClick={() => setSelectedStatus(null)}
+                    disabled={isSubmitting}
+                    variant="ghost"
+                    className="flex-1 h-14 rounded-xl font-bold text-gray-400 border-2 border-gray-800 hover:border-gray-600"
+                  >
+                    <ArrowLeft size={18} className="mr-2" />
+                    ย้อนกลับ
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className={`flex-[2] h-14 rounded-xl font-bold text-white shadow-xl ${
+                      isSubmitting ? 'bg-gray-700' : getColorClasses(selectedOption?.color, 'icon')
+                    }`}
+                  >
+                    {isSubmitting ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <Loader2 size={20} className="animate-spin" />
+                        กำลังบันทึก...
+                      </span>
+                    ) : (
+                      <span className="flex items-center justify-center gap-2">
+                        <Check size={20} />
+                        ยืนยันการเปลี่ยนแปลง
+                      </span>
+                    )}
+                  </Button>
+                </div>
+              </form>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
+export default StatusUpdateModal;

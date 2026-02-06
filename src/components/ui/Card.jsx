@@ -18,7 +18,7 @@ export const CardDescription = ({ className, ...props }) => (
 );
 
 export const CardContent = ({ className, ...props }) => (
-  <div className={cn('p-6 pt-0', className)} {...props} />
+  <div className={cn('p-6', className)} {...props} />
 );
 
 export const CardFooter = ({ className, ...props }) => (

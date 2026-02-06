@@ -1,8 +1,12 @@
-import { Shield, Wrench, LogOut, User, LayoutDashboard, Package } from 'lucide-react';
+import { useState } from 'react';
+import { Shield, Wrench, LogOut, User, LayoutDashboard, Package, Gauge, Bell, Calendar, ClipboardList, ClipboardCheck, Building2, ChevronDown, BarChart3, Cog } from 'lucide-react';
 import Button from './ui/Button';
 import Badge from './ui/Badge';
+import NotificationBell from './NotificationBell';
 
 const Header = ({ profile, onLogout, currentView, onViewChange }) => {
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
+  
   return (
     <header className="bg-gray-950 shadow-sm border-b border-gray-800 sticky top-0 z-40 backdrop-blur-md bg-gray-950/80">
       <div className="container mx-auto px-4 py-3">
@@ -27,31 +31,108 @@ const Header = ({ profile, onLogout, currentView, onViewChange }) => {
                   size="sm"
                   className={currentView === 'maintenance' ? 'bg-gray-800 text-green-400' : ''}
                 >
-                  <LayoutDashboard className="w-4 h-4 mr-2" />
+                  <Wrench className="w-4 h-4 mr-2" />
+                  แจ้งซ่อม
+                </Button>
+                <Button
+                  variant={currentView === 'dashboard' ? 'secondary' : 'ghost'}
+                  onClick={() => onViewChange('dashboard')}
+                  size="sm"
+                  className={currentView === 'dashboard' ? 'bg-gray-800 text-blue-400' : ''}
+                >
+                  <BarChart3 className="w-4 h-4 mr-2" />
                   Dashboard
                 </Button>
+                <Button
+                  variant={currentView === 'calendar' ? 'secondary' : 'ghost'}
+                  onClick={() => onViewChange('calendar')}
+                  size="sm"
+                  className={currentView === 'calendar' ? 'bg-gray-800 text-indigo-400' : ''}
+                >
+                  <Calendar className="w-4 h-4 mr-2" />
+                  ปฏิทิน
+                </Button>
+                <Button
+                  variant={currentView === 'usage' ? 'secondary' : 'ghost'}
+                  onClick={() => onViewChange('usage')}
+                  size="sm"
+                  className={currentView === 'usage' ? 'bg-gray-800 text-cyan-400' : ''}
+                >
+                  <Gauge className="w-4 h-4 mr-2" />
+                  Usage Log
+                </Button>
+                <Button
+                  variant={currentView === 'dailyChecklist' ? 'secondary' : 'ghost'}
+                  onClick={() => onViewChange('dailyChecklist')}
+                  size="sm"
+                  className={currentView === 'dailyChecklist' ? 'bg-gray-800 text-green-400' : ''}
+                >
+                  <ClipboardCheck className="w-4 h-4 mr-2" />
+                  Daily Check
+                </Button>
+                
+                {/* More Menu (Admin) */}
                 {['admin', 'moderator'].includes(profile.role) && (
-                  <Button
-                    variant={currentView === 'equipment' ? 'secondary' : 'ghost'}
-                    onClick={() => onViewChange('equipment')}
-                    size="sm"
-                    className={currentView === 'equipment' ? 'bg-gray-800 text-blue-400' : ''}
-                  >
-                    <Package className="w-4 h-4 mr-2" />
-                    Equipment
-                  </Button>
+                  <div className="relative">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowMoreMenu(!showMoreMenu)}
+                      className={['equipment', 'spareParts', 'checklists', 'vendors', 'users'].includes(currentView) ? 'bg-gray-800 text-amber-400' : ''}
+                    >
+                      <Cog className="w-4 h-4 mr-2" />
+                      จัดการ
+                      <ChevronDown className={`w-4 h-4 ml-1 transition-transform ${showMoreMenu ? 'rotate-180' : ''}`} />
+                    </Button>
+                    
+                    {showMoreMenu && (
+                      <>
+                        <div className="fixed inset-0 z-40" onClick={() => setShowMoreMenu(false)} />
+                        <div className="absolute right-0 top-full mt-1 w-48 bg-gray-900 border border-gray-800 rounded-lg shadow-xl z-50 py-1">
+                          <button
+                            onClick={() => { onViewChange('equipment'); setShowMoreMenu(false); }}
+                            className={`w-full flex items-center gap-3 px-4 py-2 text-sm hover:bg-gray-800 transition-colors ${currentView === 'equipment' ? 'text-blue-400' : 'text-gray-300'}`}
+                          >
+                            <Package className="w-4 h-4" />
+                            อุปกรณ์
+                          </button>
+                          <button
+                            onClick={() => { onViewChange('spareParts'); setShowMoreMenu(false); }}
+                            className={`w-full flex items-center gap-3 px-4 py-2 text-sm hover:bg-gray-800 transition-colors ${currentView === 'spareParts' ? 'text-emerald-400' : 'text-gray-300'}`}
+                          >
+                            <Cog className="w-4 h-4" />
+                            อะไหล่
+                          </button>
+                          <button
+                            onClick={() => { onViewChange('checklists'); setShowMoreMenu(false); }}
+                            className={`w-full flex items-center gap-3 px-4 py-2 text-sm hover:bg-gray-800 transition-colors ${currentView === 'checklists' ? 'text-teal-400' : 'text-gray-300'}`}
+                          >
+                            <ClipboardList className="w-4 h-4" />
+                            Checklists
+                          </button>
+                          <button
+                            onClick={() => { onViewChange('vendors'); setShowMoreMenu(false); }}
+                            className={`w-full flex items-center gap-3 px-4 py-2 text-sm hover:bg-gray-800 transition-colors ${currentView === 'vendors' ? 'text-amber-400' : 'text-gray-300'}`}
+                          >
+                            <Building2 className="w-4 h-4" />
+                            ผู้ขาย
+                          </button>
+                          <div className="border-t border-gray-800 my-1" />
+                          <button
+                            onClick={() => { onViewChange('users'); setShowMoreMenu(false); }}
+                            className={`w-full flex items-center gap-3 px-4 py-2 text-sm hover:bg-gray-800 transition-colors ${currentView === 'users' ? 'text-purple-400' : 'text-gray-300'}`}
+                          >
+                            <Shield className="w-4 h-4" />
+                            ผู้ใช้
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 )}
-                {['admin', 'moderator'].includes(profile.role) && (
-                  <Button
-                    variant={currentView === 'users' ? 'secondary' : 'ghost'}
-                    onClick={() => onViewChange('users')}
-                    size="sm"
-                    className={currentView === 'users' ? 'bg-gray-800 text-purple-400' : ''}
-                  >
-                    <Shield className="w-4 h-4 mr-2" />
-                    Users
-                  </Button>
-                )}
+                
+                {/* Notifications Bell */}
+                <NotificationBell profile={profile} onViewChange={onViewChange} />
               </nav>
             )}
           
@@ -97,38 +178,109 @@ const Header = ({ profile, onLogout, currentView, onViewChange }) => {
 
         {/* Mobile Navigation */}
         {profile && (
-          <nav className="md:hidden flex gap-2 mt-4 pt-3 border-t border-gray-900">
+          <nav className="md:hidden flex gap-1 mt-4 pt-3 border-t border-gray-900 overflow-x-auto pb-1">
             <Button
               variant={currentView === 'maintenance' ? 'secondary' : 'ghost'}
               onClick={() => onViewChange('maintenance')}
-              className={`flex-1 text-xs px-2 sm:text-sm ${currentView === 'maintenance' ? 'text-green-400' : ''}`}
+              className={`flex-shrink-0 text-xs px-2 ${currentView === 'maintenance' ? 'text-green-400' : ''}`}
               size="sm"
             >
-              <LayoutDashboard className="w-4 h-4 mr-2" />
-              Main
+              <Wrench className="w-4 h-4 mr-1" />
+              แจ้งซ่อม
+            </Button>
+            <Button
+              variant={currentView === 'dashboard' ? 'secondary' : 'ghost'}
+              onClick={() => onViewChange('dashboard')}
+              className={`flex-shrink-0 text-xs px-2 ${currentView === 'dashboard' ? 'text-blue-400' : ''}`}
+              size="sm"
+            >
+              <BarChart3 className="w-4 h-4 mr-1" />
+              Dashboard
+            </Button>
+            <Button
+              variant={currentView === 'calendar' ? 'secondary' : 'ghost'}
+              onClick={() => onViewChange('calendar')}
+              className={`flex-shrink-0 text-xs px-2 ${currentView === 'calendar' ? 'text-indigo-400' : ''}`}
+              size="sm"
+            >
+              <Calendar className="w-4 h-4 mr-1" />
+              ปฏิทิน
+            </Button>
+            <Button
+              variant={currentView === 'usage' ? 'secondary' : 'ghost'}
+              onClick={() => onViewChange('usage')}
+              className={`flex-shrink-0 text-xs px-2 ${currentView === 'usage' ? 'text-cyan-400' : ''}`}
+              size="sm"
+            >
+              <Gauge className="w-4 h-4 mr-1" />
+              Usage
+            </Button>
+            <Button
+              variant={currentView === 'dailyChecklist' ? 'secondary' : 'ghost'}
+              onClick={() => onViewChange('dailyChecklist')}
+              className={`flex-shrink-0 text-xs px-2 ${currentView === 'dailyChecklist' ? 'text-green-400' : ''}`}
+              size="sm"
+            >
+              <ClipboardCheck className="w-4 h-4 mr-1" />
+              Daily
             </Button>
             {['admin', 'moderator'].includes(profile.role) && (
-              <Button
-                variant={currentView === 'equipment' ? 'secondary' : 'ghost'}
-                onClick={() => onViewChange('equipment')}
-                className={`flex-1 text-xs px-2 sm:text-sm ${currentView === 'equipment' ? 'text-blue-400' : ''}`}
-                size="sm"
-              >
-                <Package className="w-4 h-4 mr-2" />
-                Equipment
-              </Button>
+              <>
+                <Button
+                  variant={currentView === 'spareParts' ? 'secondary' : 'ghost'}
+                  onClick={() => onViewChange('spareParts')}
+                  className={`flex-shrink-0 text-xs px-2 ${currentView === 'spareParts' ? 'text-emerald-400' : ''}`}
+                  size="sm"
+                >
+                  <Cog className="w-4 h-4 mr-1" />
+                  อะไหล่
+                </Button>
+                <Button
+                  variant={currentView === 'equipment' ? 'secondary' : 'ghost'}
+                  onClick={() => onViewChange('equipment')}
+                  className={`flex-shrink-0 text-xs px-2 ${currentView === 'equipment' ? 'text-blue-400' : ''}`}
+                  size="sm"
+                >
+                  <Package className="w-4 h-4 mr-1" />
+                  อุปกรณ์
+                </Button>
+                <Button
+                  variant={currentView === 'checklists' ? 'secondary' : 'ghost'}
+                  onClick={() => onViewChange('checklists')}
+                  className={`flex-shrink-0 text-xs px-2 ${currentView === 'checklists' ? 'text-teal-400' : ''}`}
+                  size="sm"
+                >
+                  <ClipboardList className="w-4 h-4 mr-1" />
+                  Checklist
+                </Button>
+                <Button
+                  variant={currentView === 'vendors' ? 'secondary' : 'ghost'}
+                  onClick={() => onViewChange('vendors')}
+                  className={`flex-shrink-0 text-xs px-2 ${currentView === 'vendors' ? 'text-amber-400' : ''}`}
+                  size="sm"
+                >
+                  <Building2 className="w-4 h-4 mr-1" />
+                  ผู้ขาย
+                </Button>
+                <Button
+                  variant={currentView === 'users' ? 'secondary' : 'ghost'}
+                  onClick={() => onViewChange('users')}
+                  className={`flex-shrink-0 text-xs px-2 ${currentView === 'users' ? 'text-purple-400' : ''}`}
+                  size="sm"
+                >
+                  <Shield className="w-4 h-4 mr-1" />
+                  ผู้ใช้
+                </Button>
+              </>
             )}
-            {['admin', 'moderator'].includes(profile.role) && (
-              <Button
-                variant={currentView === 'users' ? 'secondary' : 'ghost'}
-                onClick={() => onViewChange('users')}
-                className={`flex-1 text-xs px-2 sm:text-sm ${currentView === 'users' ? 'text-purple-400' : ''}`}
-                size="sm"
-              >
-                <Shield className="w-4 h-4 mr-2" />
-                Users
-              </Button>
-            )}
+            <Button
+              variant={currentView === 'notifications' ? 'secondary' : 'ghost'}
+              onClick={() => onViewChange('notifications')}
+              className={`flex-shrink-0 text-xs px-2 ${currentView === 'notifications' ? 'text-purple-400' : ''}`}
+              size="sm"
+            >
+              <Bell className="w-4 h-4" />
+            </Button>
           </nav>
         )}
       </div>
