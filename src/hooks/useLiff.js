@@ -9,11 +9,31 @@ const useLiff = () => {
   const [lineUserId, setLineUserId] = useState(null);
   const isInitialized = useRef(false);
 
+  // ตรวจสอบว่าอยู่ในโหมด Mock หรือไม่ (ปิดได้ผ่าน VITE_USE_MOCK=false)
+  const useMockProfile = import.meta.env.VITE_USE_MOCK === 'true';
+
   useEffect(() => {
     // ป้องกันการ init ซ้ำจาก React Strict Mode
     if (isInitialized.current) return;
     
     isInitialized.current = true;
+
+    // ถ้าเปิดโหมด Mock ให้ใช้ mock profile (ต้องตั้ง VITE_USE_MOCK=true ใน .env)
+    if (useMockProfile) {
+      console.log('🔧 Mock Mode: Using mock profile');
+      setProfile({
+        userId: 1,
+        displayName: 'Dev User',
+        pictureUrl: 'https://via.placeholder.com/150/3b82f6/ffffff?text=DEV',
+        email: 'dev@example.com',
+        role: 'admin'
+      });
+      setLineUserId('dev-user-id');
+      setIsLoggedIn(true);
+      setIsLoading(false);
+      return;
+    }
+
     initializeLiff();
   }, []);
 
