@@ -15,7 +15,7 @@ import {
   Save
 } from 'lucide-react';
 import { vendorsAPI, equipmentAPI } from '../services/api';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/Card';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/Card';
 import Button from './ui/Button';
 import Badge from './ui/Badge';
 
