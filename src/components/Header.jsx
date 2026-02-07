@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Shield, Wrench, LogOut, User, LayoutDashboard, Package, Gauge, Bell, Calendar, ClipboardList, ClipboardCheck, Building2, ChevronDown, BarChart3, Cog } from 'lucide-react';
+import { Shield, Wrench, LogOut, User, LayoutDashboard, Package, Gauge, Bell, Calendar, ClipboardList, ClipboardCheck, Building2, ChevronDown, BarChart3, Cog, FileText, ShoppingCart } from 'lucide-react';
 import Button from './ui/Button';
 import Badge from './ui/Badge';
 import NotificationBell from './NotificationBell';
@@ -34,6 +34,7 @@ const Header = ({ profile, onLogout, currentView, onViewChange }) => {
                   <Wrench className="w-4 h-4 mr-2" />
                   แจ้งซ่อม
                 </Button>
+{['admin', 'moderator'].includes(profile.role) && (
                 <Button
                   variant={currentView === 'dashboard' ? 'secondary' : 'ghost'}
                   onClick={() => onViewChange('dashboard')}
@@ -43,6 +44,7 @@ const Header = ({ profile, onLogout, currentView, onViewChange }) => {
                   <BarChart3 className="w-4 h-4 mr-2" />
                   Dashboard
                 </Button>
+                )}
                 <Button
                   variant={currentView === 'calendar' ? 'secondary' : 'ghost'}
                   onClick={() => onViewChange('calendar')}
@@ -78,7 +80,7 @@ const Header = ({ profile, onLogout, currentView, onViewChange }) => {
                       variant="ghost"
                       size="sm"
                       onClick={() => setShowMoreMenu(!showMoreMenu)}
-                      className={['equipment', 'spareParts', 'checklists', 'vendors', 'users'].includes(currentView) ? 'bg-gray-800 text-amber-400' : ''}
+                      className={['equipment', 'spareParts', 'checklists', 'vendors', 'users', 'requisitions', 'purchaseOrders', 'partsReturns'].includes(currentView) ? 'bg-gray-800 text-amber-400' : ''}
                     >
                       <Cog className="w-4 h-4 mr-2" />
                       จัดการ
@@ -116,6 +118,28 @@ const Header = ({ profile, onLogout, currentView, onViewChange }) => {
                           >
                             <Building2 className="w-4 h-4" />
                             ผู้ขาย
+                          </button>
+                          <div className="border-t border-gray-800 my-1" />
+                          <button
+                            onClick={() => { onViewChange('requisitions'); setShowMoreMenu(false); }}
+                            className={`w-full flex items-center gap-3 px-4 py-2 text-sm hover:bg-gray-800 transition-colors ${currentView === 'requisitions' ? 'text-orange-400' : 'text-gray-300'}`}
+                          >
+                            <FileText className="w-4 h-4" />
+                            ใบขอเบิก (PR)
+                          </button>
+                          <button
+                            onClick={() => { onViewChange('purchaseOrders'); setShowMoreMenu(false); }}
+                            className={`w-full flex items-center gap-3 px-4 py-2 text-sm hover:bg-gray-800 transition-colors ${currentView === 'purchaseOrders' ? 'text-sky-400' : 'text-gray-300'}`}
+                          >
+                            <ShoppingCart className="w-4 h-4" />
+                            ใบสั่งซื้อ (PO)
+                          </button>
+                          <button
+                            onClick={() => { onViewChange('partsReturns'); setShowMoreMenu(false); }}
+                            className={`w-full flex items-center gap-3 px-4 py-2 text-sm hover:bg-gray-800 transition-colors ${currentView === 'partsReturns' ? 'text-orange-400' : 'text-gray-300'}`}
+                          >
+                            <Package className="w-4 h-4" />
+                            ใบขอคืน (RTN)
                           </button>
                           <div className="border-t border-gray-800 my-1" />
                           <button
@@ -188,6 +212,7 @@ const Header = ({ profile, onLogout, currentView, onViewChange }) => {
               <Wrench className="w-4 h-4 mr-1" />
               แจ้งซ่อม
             </Button>
+{['admin', 'moderator'].includes(profile.role) && (
             <Button
               variant={currentView === 'dashboard' ? 'secondary' : 'ghost'}
               onClick={() => onViewChange('dashboard')}
@@ -197,6 +222,7 @@ const Header = ({ profile, onLogout, currentView, onViewChange }) => {
               <BarChart3 className="w-4 h-4 mr-1" />
               Dashboard
             </Button>
+            )}
             <Button
               variant={currentView === 'calendar' ? 'secondary' : 'ghost'}
               onClick={() => onViewChange('calendar')}
@@ -261,6 +287,33 @@ const Header = ({ profile, onLogout, currentView, onViewChange }) => {
                 >
                   <Building2 className="w-4 h-4 mr-1" />
                   ผู้ขาย
+                </Button>
+                <Button
+                  variant={currentView === 'requisitions' ? 'secondary' : 'ghost'}
+                  onClick={() => onViewChange('requisitions')}
+                  className={`flex-shrink-0 text-xs px-2 ${currentView === 'requisitions' ? 'text-orange-400' : ''}`}
+                  size="sm"
+                >
+                  <FileText className="w-4 h-4 mr-1" />
+                  PR
+                </Button>
+                <Button
+                  variant={currentView === 'purchaseOrders' ? 'secondary' : 'ghost'}
+                  onClick={() => onViewChange('purchaseOrders')}
+                  className={`flex-shrink-0 text-xs px-2 ${currentView === 'purchaseOrders' ? 'text-sky-400' : ''}`}
+                  size="sm"
+                >
+                  <ShoppingCart className="w-4 h-4 mr-1" />
+                  PO
+                </Button>
+                <Button
+                  variant={currentView === 'partsReturns' ? 'secondary' : 'ghost'}
+                  onClick={() => onViewChange('partsReturns')}
+                  className={`flex-shrink-0 text-xs px-2 ${currentView === 'partsReturns' ? 'text-orange-400' : ''}`}
+                  size="sm"
+                >
+                  <Package className="w-4 h-4 mr-1" />
+                  RTN
                 </Button>
                 <Button
                   variant={currentView === 'users' ? 'secondary' : 'ghost'}

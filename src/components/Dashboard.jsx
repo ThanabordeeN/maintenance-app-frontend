@@ -247,14 +247,7 @@ export default function Dashboard() {
               <p className="text-gray-500 mt-2">ชั่วโมงรวม</p>
             </div>
             
-            <div className="grid grid-cols-2 gap-4 mt-6">
-              <Card className="bg-gray-900/30 border-gray-700">
-                <CardContent className="p-4 text-center">
-                  <DollarSign className="w-6 h-6 mx-auto text-amber-400 mb-2" />
-                  <p className="text-xl font-bold text-amber-400">{formatCurrency(summary?.labor_cost || 0)}</p>
-                  <p className="text-xs text-gray-500 mt-1">ค่าแรง</p>
-                </CardContent>
-              </Card>
+            <div className="grid grid-cols-1 gap-4 mt-6">
               <Card className="bg-gray-900/30 border-gray-700">
                 <CardContent className="p-4 text-center">
                   <Package className="w-6 h-6 mx-auto text-blue-400 mb-2" />

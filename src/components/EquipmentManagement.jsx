@@ -219,7 +219,7 @@ const EquipmentManagement = ({ profile }) => {
       await fetchEquipment();
       
       // Update selectedEquipment with new data
-      const updatedData = await equipmentAPI.getAll(showInactive);
+      const updatedData = await equipmentAPI.getAll(filterActive === 'inactive');
       const updated = (updatedData.equipment || []).find(e => e.id === selectedEquipment.id);
       if (updated) {
         setSelectedEquipment(updated);
@@ -251,7 +251,7 @@ const EquipmentManagement = ({ profile }) => {
       await fetchEquipment();
       
       // Update selectedEquipment with new data
-      const updatedData = await equipmentAPI.getAll(showInactive);
+      const updatedData = await equipmentAPI.getAll(filterActive === 'inactive');
       const updated = (updatedData.equipment || []).find(e => e.id === selectedEquipment.id);
       if (updated) {
         setSelectedEquipment(updated);

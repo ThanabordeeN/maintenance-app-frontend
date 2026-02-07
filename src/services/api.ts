@@ -237,7 +237,7 @@ export const usageAPI = {
 
   // Get all usage logs
   getAll: async (limit = 50, equipmentId?: number): Promise<{ logs: any[] }> => {
-    const url = equipmentId 
+    const url = equipmentId
       ? `${API_URL}/maintenance/usage-logs?limit=${limit}&equipment_id=${equipmentId}`
       : `${API_URL}/maintenance/usage-logs?limit=${limit}`;
     const response = await fetch(url);
@@ -322,7 +322,7 @@ export const sparePartsAPI = {
     if (params?.category) searchParams.append('category', params.category);
     if (params?.lowStock) searchParams.append('lowStock', 'true');
     if (params?.search) searchParams.append('search', params.search);
-    
+
     const url = `${API_URL}/spare-parts${searchParams.toString() ? '?' + searchParams.toString() : ''}`;
     const response = await fetch(url);
     if (!response.ok) throw new Error('Failed to fetch spare parts');
@@ -394,7 +394,7 @@ export const reportsAPI = {
     if (params?.startDate) searchParams.append('startDate', params.startDate);
     if (params?.endDate) searchParams.append('endDate', params.endDate);
     if (params?.equipmentId) searchParams.append('equipmentId', params.equipmentId.toString());
-    
+
     const url = `${API_URL}/reports/summary${searchParams.toString() ? '?' + searchParams.toString() : ''}`;
     const response = await fetch(url);
     if (!response.ok) throw new Error('Failed to fetch summary');
@@ -406,7 +406,7 @@ export const reportsAPI = {
     if (params?.startDate) searchParams.append('startDate', params.startDate);
     if (params?.endDate) searchParams.append('endDate', params.endDate);
     if (params?.equipmentId) searchParams.append('equipmentId', params.equipmentId.toString());
-    
+
     const response = await fetch(`${API_URL}/reports/mtbf${searchParams.toString() ? '?' + searchParams.toString() : ''}`);
     if (!response.ok) throw new Error('Failed to fetch MTBF');
     return response.json();
@@ -417,7 +417,7 @@ export const reportsAPI = {
     if (params?.startDate) searchParams.append('startDate', params.startDate);
     if (params?.endDate) searchParams.append('endDate', params.endDate);
     if (params?.equipmentId) searchParams.append('equipmentId', params.equipmentId.toString());
-    
+
     const response = await fetch(`${API_URL}/reports/mttr${searchParams.toString() ? '?' + searchParams.toString() : ''}`);
     if (!response.ok) throw new Error('Failed to fetch MTTR');
     return response.json();
@@ -428,7 +428,7 @@ export const reportsAPI = {
     if (params?.startDate) searchParams.append('startDate', params.startDate);
     if (params?.endDate) searchParams.append('endDate', params.endDate);
     if (params?.equipmentId) searchParams.append('equipmentId', params.equipmentId.toString());
-    
+
     const response = await fetch(`${API_URL}/reports/oee${searchParams.toString() ? '?' + searchParams.toString() : ''}`);
     if (!response.ok) throw new Error('Failed to fetch OEE');
     return response.json();
@@ -438,7 +438,7 @@ export const reportsAPI = {
     const searchParams = new URLSearchParams();
     if (month) searchParams.append('month', month.toString());
     if (year) searchParams.append('year', year.toString());
-    
+
     const response = await fetch(`${API_URL}/reports/calendar${searchParams.toString() ? '?' + searchParams.toString() : ''}`);
     if (!response.ok) throw new Error('Failed to fetch calendar');
     return response.json();
@@ -450,7 +450,7 @@ export const reportsAPI = {
     if (params?.endDate) searchParams.append('endDate', params.endDate);
     if (params?.equipmentId) searchParams.append('equipmentId', params.equipmentId.toString());
     if (params?.status) searchParams.append('status', params.status);
-    
+
     const response = await fetch(`${API_URL}/reports/export${searchParams.toString() ? '?' + searchParams.toString() : ''}`);
     if (!response.ok) throw new Error('Failed to export data');
     return response.json();
@@ -462,7 +462,7 @@ export const notificationsAPI = {
   getAll: async (userId: number, unreadOnly = false): Promise<{ notifications: any[]; unreadCount: number }> => {
     const params = new URLSearchParams({ userId: userId.toString() });
     if (unreadOnly) params.append('unreadOnly', 'true');
-    
+
     const response = await fetch(`${API_URL}/notifications?${params.toString()}`);
     if (!response.ok) throw new Error('Failed to fetch notifications');
     return response.json();
@@ -543,7 +543,7 @@ export const checklistsAPI = {
     const searchParams = new URLSearchParams();
     if (params?.category) searchParams.append('category', params.category);
     if (params?.equipment_type) searchParams.append('equipment_type', params.equipment_type);
-    
+
     const response = await fetch(`${API_URL}/checklists/templates${searchParams.toString() ? '?' + searchParams.toString() : ''}`);
     if (!response.ok) throw new Error('Failed to fetch templates');
     return response.json();
@@ -586,7 +586,7 @@ export const checklistsAPI = {
     const searchParams = new URLSearchParams();
     if (params?.maintenance_record_id) searchParams.append('maintenance_record_id', params.maintenance_record_id.toString());
     if (params?.equipment_id) searchParams.append('equipment_id', params.equipment_id.toString());
-    
+
     const response = await fetch(`${API_URL}/checklists/responses${searchParams.toString() ? '?' + searchParams.toString() : ''}`);
     if (!response.ok) throw new Error('Failed to fetch responses');
     return response.json();
@@ -657,7 +657,7 @@ export const vendorsAPI = {
     const searchParams = new URLSearchParams();
     if (params?.type) searchParams.append('type', params.type);
     if (params?.search) searchParams.append('search', params.search);
-    
+
     const response = await fetch(`${API_URL}/vendors${searchParams.toString() ? '?' + searchParams.toString() : ''}`);
     if (!response.ok) throw new Error('Failed to fetch vendors');
     return response.json();
@@ -700,7 +700,7 @@ export const vendorsAPI = {
     const searchParams = new URLSearchParams();
     if (equipmentId) searchParams.append('equipment_id', equipmentId.toString());
     if (expiring) searchParams.append('expiring', 'true');
-    
+
     const response = await fetch(`${API_URL}/vendors/warranties${searchParams.toString() ? '?' + searchParams.toString() : ''}`);
     if (!response.ok) throw new Error('Failed to fetch warranties');
     return response.json();
@@ -720,7 +720,7 @@ export const vendorsAPI = {
   getDocuments: async (equipmentId?: number): Promise<{ documents: any[] }> => {
     const searchParams = new URLSearchParams();
     if (equipmentId) searchParams.append('equipment_id', equipmentId.toString());
-    
+
     const response = await fetch(`${API_URL}/vendors/documents${searchParams.toString() ? '?' + searchParams.toString() : ''}`);
     if (!response.ok) throw new Error('Failed to fetch documents');
     return response.json();
@@ -785,6 +785,268 @@ export const setupAPI = {
   getStatus: async (): Promise<{ tables: { name: string; count: number }[] }> => {
     const response = await fetch(`${API_URL}/setup/status`);
     if (!response.ok) throw new Error('Failed to get status');
+    return response.json();
+  },
+};
+
+// =========================================
+// PURCHASE REQUISITIONS API
+// =========================================
+export const requisitionsAPI = {
+  getAll: async (params?: { status?: string; priority?: string; from_date?: string; to_date?: string }): Promise<{ requisitions: any[]; stats: any }> => {
+    const searchParams = new URLSearchParams();
+    if (params?.status) searchParams.append('status', params.status);
+    if (params?.priority) searchParams.append('priority', params.priority);
+    if (params?.from_date) searchParams.append('from_date', params.from_date);
+    if (params?.to_date) searchParams.append('to_date', params.to_date);
+
+    const response = await fetch(`${API_URL}/requisitions${searchParams.toString() ? '?' + searchParams.toString() : ''}`);
+    if (!response.ok) throw new Error('Failed to fetch requisitions');
+    return response.json();
+  },
+
+  getById: async (id: number): Promise<{ requisition: any; items: any[] }> => {
+    const response = await fetch(`${API_URL}/requisitions/${id}`);
+    if (!response.ok) throw new Error('Requisition not found');
+    return response.json();
+  },
+
+  getByMaintenance: async (maintenanceId: number): Promise<{ requisitions: any[] }> => {
+    const response = await fetch(`${API_URL}/requisitions/by-maintenance/${maintenanceId}`);
+    if (!response.ok) throw new Error('Failed to fetch requisitions');
+    return response.json();
+  },
+
+  create: async (data: {
+    maintenance_record_id?: number;
+    requested_by: number;
+    priority?: string;
+    notes?: string;
+    items: Array<{
+      spare_part_id?: number;
+      custom_item_name?: string;
+      custom_item_unit?: string;
+      quantity: number;
+      unit_price: number;
+      notes?: string;
+    }>;
+  }): Promise<{ success: boolean; requisition: any; pr_number: string }> => {
+    const response = await fetch(`${API_URL}/requisitions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to create requisition');
+    }
+    return response.json();
+  },
+
+  approve: async (id: number, approved_by: number): Promise<{ success: boolean; all_stock_available: boolean; stock_issues: any[] }> => {
+    const response = await fetch(`${API_URL}/requisitions/${id}/approve`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ approved_by }),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to approve requisition');
+    }
+    return response.json();
+  },
+
+  reject: async (id: number, approved_by: number, rejection_reason: string): Promise<{ success: boolean }> => {
+    const response = await fetch(`${API_URL}/requisitions/${id}/reject`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ approved_by, rejection_reason }),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to reject requisition');
+    }
+    return response.json();
+  },
+
+  cancel: async (id: number, cancelled_by: number, reason: string): Promise<{ success: boolean }> => {
+    const response = await fetch(`${API_URL}/requisitions/${id}/cancel`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cancelled_by, reason }),
+    });
+    if (!response.ok) throw new Error('Failed to cancel requisition');
+    return response.json();
+  },
+};
+
+// =========================================
+// PURCHASE ORDERS API
+// =========================================
+export const purchaseOrdersAPI = {
+  getAll: async (params?: { status?: string; vendor_id?: number; from_date?: string; to_date?: string }): Promise<{ orders: any[]; stats: any }> => {
+    const searchParams = new URLSearchParams();
+    if (params?.status) searchParams.append('status', params.status);
+    if (params?.vendor_id) searchParams.append('vendor_id', params.vendor_id.toString());
+    if (params?.from_date) searchParams.append('from_date', params.from_date);
+    if (params?.to_date) searchParams.append('to_date', params.to_date);
+
+    const response = await fetch(`${API_URL}/purchase-orders${searchParams.toString() ? '?' + searchParams.toString() : ''}`);
+    if (!response.ok) throw new Error('Failed to fetch purchase orders');
+    return response.json();
+  },
+
+  getById: async (id: number): Promise<{ order: any; items: any[] }> => {
+    const response = await fetch(`${API_URL}/purchase-orders/${id}`);
+    if (!response.ok) throw new Error('Purchase order not found');
+    return response.json();
+  },
+
+  getPrintData: async (id: number): Promise<{ company: any; order: any; items: any[]; print_date: string }> => {
+    const response = await fetch(`${API_URL}/purchase-orders/${id}/print`);
+    if (!response.ok) throw new Error('Failed to get print data');
+    return response.json();
+  },
+
+  create: async (data: {
+    pr_id?: number;
+    vendor_id: number;
+    created_by: number;
+    payment_terms?: string;
+    delivery_date?: string;
+    delivery_address?: string;
+    tax_rate?: number;
+    notes?: string;
+    items?: any[];
+  }): Promise<{ success: boolean; order: any; po_number: string }> => {
+    const response = await fetch(`${API_URL}/purchase-orders`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to create purchase order');
+    }
+    return response.json();
+  },
+
+  update: async (id: number, data: any): Promise<{ success: boolean }> => {
+    const response = await fetch(`${API_URL}/purchase-orders/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error('Failed to update purchase order');
+    return response.json();
+  },
+
+  approve: async (id: number, approved_by: number): Promise<{ success: boolean }> => {
+    const response = await fetch(`${API_URL}/purchase-orders/${id}/approve`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ approved_by }),
+    });
+    if (!response.ok) throw new Error('Failed to approve purchase order');
+    return response.json();
+  },
+
+  markOrdered: async (id: number, ordered_by: number): Promise<{ success: boolean }> => {
+    const response = await fetch(`${API_URL}/purchase-orders/${id}/mark-ordered`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ordered_by }),
+    });
+    if (!response.ok) throw new Error('Failed to mark as ordered');
+    return response.json();
+  },
+
+  receive: async (id: number, received_by: number, items: Array<{ po_item_id: number; received_quantity: number; actual_unit_price?: number }>): Promise<{ success: boolean; status: string }> => {
+    const response = await fetch(`${API_URL}/purchase-orders/${id}/receive`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ received_by, items }),
+    });
+    if (!response.ok) throw new Error('Failed to receive items');
+    return response.json();
+  },
+
+  cancel: async (id: number, reason: string): Promise<{ success: boolean }> => {
+    const response = await fetch(`${API_URL}/purchase-orders/${id}/cancel`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reason }),
+    });
+    if (!response.ok) throw new Error('Failed to cancel purchase order');
+    return response.json();
+  },
+};
+
+// =========================================
+// PARTS RETURNS API
+// =========================================
+export const partsReturnsAPI = {
+  getAll: async (params?: { status?: string; from_date?: string; to_date?: string }): Promise<{ returns: any[]; stats: any }> => {
+    const searchParams = new URLSearchParams();
+    if (params?.status) searchParams.append('status', params.status);
+    if (params?.from_date) searchParams.append('from_date', params.from_date);
+    if (params?.to_date) searchParams.append('to_date', params.to_date);
+
+    const response = await fetch(`${API_URL}/parts-returns${searchParams.toString() ? '?' + searchParams.toString() : ''}`);
+    if (!response.ok) throw new Error('Failed to fetch returns');
+    return response.json();
+  },
+
+  getByMaintenance: async (maintenanceId: number): Promise<{ returns: any[] }> => {
+    const response = await fetch(`${API_URL}/parts-returns/by-maintenance/${maintenanceId}`);
+    if (!response.ok) throw new Error('Failed to fetch returns');
+    return response.json();
+  },
+
+  getById: async (id: number): Promise<{ return: any }> => {
+    const response = await fetch(`${API_URL}/parts-returns/${id}`);
+    if (!response.ok) throw new Error('Return not found');
+    return response.json();
+  },
+
+  create: async (data: {
+    maintenance_record_id?: number;
+    maintenance_part_used_id?: number;
+    spare_part_id: number;
+    quantity: number;
+    reason: 'wrong_part' | 'defective' | 'not_needed' | 'excess';
+    notes?: string;
+    returned_by: number;
+  }): Promise<{ success: boolean; return: any; return_number: string }> => {
+    const response = await fetch(`${API_URL}/parts-returns`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to create return');
+    }
+    return response.json();
+  },
+
+  approve: async (id: number, approved_by: number): Promise<{ success: boolean }> => {
+    const response = await fetch(`${API_URL}/parts-returns/${id}/approve`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ approved_by }),
+    });
+    if (!response.ok) throw new Error('Failed to approve return');
+    return response.json();
+  },
+
+  reject: async (id: number, approved_by: number, reason: string): Promise<{ success: boolean }> => {
+    const response = await fetch(`${API_URL}/parts-returns/${id}/reject`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ approved_by, reason }),
+    });
+    if (!response.ok) throw new Error('Failed to reject return');
     return response.json();
   },
 };
