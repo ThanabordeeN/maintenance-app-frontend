@@ -295,7 +295,7 @@ function App() {
                 <ChevronLeft className="w-4 h-4 mr-2" />กลับหน้าหลัก
               </Button>
             </Card>
-          )        ) : currentView === 'partsReturns' ? (
+          ) : currentView === 'partsReturns' ? (
           // Parts Returns (Admin/Moderator Only)
           ['admin', 'moderator'].includes(profile.role) ? (
             <PartsReturnList 
