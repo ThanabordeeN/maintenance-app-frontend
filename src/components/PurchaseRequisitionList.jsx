@@ -599,7 +599,7 @@ const PurchaseRequisitionList = ({ userId, userRole }) => {
                                 <div className="mt-2 px-3 py-2 bg-sky-600/10 border border-sky-500/30 rounded-lg flex items-center gap-2">
                                     <Check size={16} className="text-sky-400" />
                                     <span className="text-sky-300 text-sm">
-                                        เลือก: {vendors.find(v => v.id === selectedVendor)?.name}
+                                        เลือก: {vendors.find(v => v.id === selectedVendor)?.vendor_name || vendors.find(v => v.id === selectedVendor)?.name}
                                     </span>
                                 </div>
                             )}
