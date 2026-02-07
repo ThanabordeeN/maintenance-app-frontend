@@ -111,17 +111,6 @@ export default function SparePartsManagement() {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!confirm('ต้องการลบอะไหล่นี้หรือไม่?')) return;
-    try {
-      await sparePartsAPI.delete(id);
-      fetchParts();
-      if (selectedPart?.id === id) setSelectedPart(null);
-    } catch (error) {
-      alert(error.message);
-    }
-  };
-
   const handleEdit = (part) => {
     setEditingPart(part);
     setFormData({
