@@ -294,7 +294,13 @@ export default function SparePartsManagement() {
                     <Button
                       key={t.value}
                       variant={adjustType === t.value ? 'default' : 'outline'}
-                      className={`flex-1 ${adjustType === t.value ? `bg-${t.color}-600` : ''}`}
+                      className={`flex-1 ${
+                        adjustType === t.value
+                          ? t.value === 'in'
+                            ? 'bg-green-600'
+                            : 'bg-red-600'
+                          : ''
+                      }`}
                       onClick={() => setAdjustType(t.value)}
                     >
                       <t.icon className="w-4 h-4 mr-2" />
