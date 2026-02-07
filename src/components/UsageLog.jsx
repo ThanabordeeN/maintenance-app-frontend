@@ -25,7 +25,6 @@ import {
   ArrowLeft
 } from 'lucide-react';
 import { usageAPI, equipmentAPI } from '../services/api';
-import { formatThaiDateTime } from '../lib/utils';
 
 export default function UsageLog() {
   const [equipment, setEquipment] = useState([]);
