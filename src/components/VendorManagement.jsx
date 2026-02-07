@@ -10,12 +10,9 @@ import {
   Mail,
   MapPin,
   User,
-  FileText,
-  Calendar,
   Shield,
   X,
-  Save,
-  ExternalLink
+  Save
 } from 'lucide-react';
 import { vendorsAPI, equipmentAPI } from '../services/api';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/Card';
