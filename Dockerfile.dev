@@ -1,0 +1,16 @@
+# Development Dockerfile for maintenance_app frontend
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install dependencies
+COPY package*.json ./
+RUN npm install
+
+# Copy source
+COPY . .
+
+EXPOSE 3010
+
+# Start with vite dev server
+CMD ["npm", "run", "dev", "--", "--host"]
