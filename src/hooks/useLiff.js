@@ -63,8 +63,6 @@ const useLiff = () => {
           // เก็บ LINE User ID ไว้ใช้แสดงในหน้า error
           setLineUserId(userProfile.userId);
           
-          console.log('User logged in:', userProfile.userId);
-          
           if (!accessToken) {
             // ลอง login ใหม่
             console.warn('No access token, re-logging in...');
@@ -95,13 +93,23 @@ const useLiff = () => {
               });
               setIsLoggedIn(true);
             } else {
-              // ถ้า token ไม่ valid ให้ logout และ login ใหม่
-              if (response.status === 401) {
+              // ถ้า 401 แต่เป็นเพราะ user not found ไม่ต้อง auto-logout
+              if (response.status === 401 && data.message && 
+                  (data.message.includes('not found') || 
+                   data.message.includes('not authorized') ||
+                   data.message.includes('Unauthorized'))) {
+                // แสดง error พร้อม LINE User ID แทนการ logout
+                throw new Error(data.message || 'User not authorized');
+              }
+              
+              // กรณี token invalid ถึงจะ logout
+              if (response.status === 401 && data.message && data.message.includes('invalid')) {
                 console.warn('Token invalid, logging out...');
                 liff.logout();
                 window.location.reload();
                 return;
               }
+              
               throw new Error(data.message || 'User not authorized');
             }
           } catch (fetchError) {

@@ -2,6 +2,16 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# Build arguments for environment variables
+ARG VITE_LIFF_ID
+ARG VITE_API_URL=/maintenance/api
+ARG VITE_USE_MOCK=false
+
+# Set as environment variables for Vite build
+ENV VITE_LIFF_ID=$VITE_LIFF_ID
+ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_USE_MOCK=$VITE_USE_MOCK
+
 COPY package*.json ./
 COPY tsconfig*.json ./
 COPY vite.config.js ./
