@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { usersAPI } from '../services/users';
 import {
   Users, UserPlus, Edit2, Trash2, Shield, User as UserIcon,
-  Search, ShieldCheck, Mail, Calendar, AlertCircle
+  Search, ShieldCheck, Mail, Calendar, AlertCircle, X
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/Card';
 import Button from './ui/Button';
