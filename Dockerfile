@@ -26,14 +26,17 @@ RUN npx vite build
 # Production stage
 FROM nginx:alpine
 
+# Build arg to select nginx config (default: nginx.conf)
+ARG NGINX_CONF=nginx.conf
+
 # Remove default nginx static assets
 RUN rm -rf /usr/share/nginx/html/*
 
 # Copy built assets to /maintenance subdirectory
 COPY --from=builder /app/dist /usr/share/nginx/html/maintenance
 
-# Copy custom nginx config
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copy custom nginx config (selectable via build-arg)
+COPY ${NGINX_CONF} /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 
