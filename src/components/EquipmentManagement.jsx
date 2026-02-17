@@ -602,6 +602,9 @@ const EquipmentManagement = ({ profile }) => {
                           <h3 className="font-bold text-white text-lg truncate">
                             {item.equipment_name || item.equipment_code}
                           </h3>
+                          {item.source === 'system' && (
+                            <Badge className="bg-indigo-500/20 text-indigo-300 border-indigo-500/30 text-xs">🔒 ระบบ</Badge>
+                          )}
                           {!item.is_active && (
                             <Badge className="bg-gray-700 text-gray-400 text-xs">ปิดใช้งาน</Badge>
                           )}
@@ -673,28 +676,32 @@ const EquipmentManagement = ({ profile }) => {
                         แก้ไข
                       </Button>
 
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleToggle(item)}
-                        className={`justify-center py-3 border ${item.is_active
-                          ? 'text-orange-400 hover:bg-orange-500/10 border-orange-500/30'
-                          : 'text-green-400 hover:bg-green-500/10 border-green-500/30'
-                          }`}
-                      >
-                        <Power size={18} className="mr-1.5" />
-                        {item.is_active ? 'ปิด' : 'เปิด'}
-                      </Button>
+                      {item.source !== 'system' && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleToggle(item)}
+                          className={`justify-center py-3 border ${item.is_active
+                            ? 'text-orange-400 hover:bg-orange-500/10 border-orange-500/30'
+                            : 'text-green-400 hover:bg-green-500/10 border-green-500/30'
+                            }`}
+                        >
+                          <Power size={18} className="mr-1.5" />
+                          {item.is_active ? 'ปิด' : 'เปิด'}
+                        </Button>
+                      )}
 
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDelete(item)}
-                        className="justify-center py-3 text-red-400 hover:bg-red-500/10 border border-red-500/30"
-                      >
-                        <Trash2 size={18} className="mr-1.5" />
-                        ลบ
-                      </Button>
+                      {item.source !== 'system' && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(item)}
+                          className="justify-center py-3 text-red-400 hover:bg-red-500/10 border border-red-500/30"
+                        >
+                          <Trash2 size={18} className="mr-1.5" />
+                          ลบ
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </CardContent>
