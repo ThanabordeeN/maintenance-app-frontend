@@ -31,6 +31,7 @@ const EquipmentManagement = ({ profile }) => {
     maintenance_unit: '',
     initial_usage: '',
     current_usage: '',
+    maintenance_interval: '',
     maintenance_schedules: []
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -157,6 +158,7 @@ const EquipmentManagement = ({ profile }) => {
       maintenance_unit: item.maintenance_unit || '',
       initial_usage: item.initial_usage || '',
       current_usage: item.current_usage || '',
+      maintenance_interval: item.maintenance_schedules?.[0]?.interval_value || '',
       maintenance_schedules: item.maintenance_schedules || []
     });
     setCurrentStep(1);
@@ -273,6 +275,7 @@ const EquipmentManagement = ({ profile }) => {
       maintenance_unit: '',
       initial_usage: '',
       current_usage: '',
+      maintenance_interval: '',
       maintenance_schedules: []
     });
     setEditingEquipment(null);
@@ -947,6 +950,28 @@ const EquipmentManagement = ({ profile }) => {
                             placeholder="0"
                             className="w-full bg-gray-900 border border-gray-800 text-white px-4 py-3 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none"
                           />
+                        </div>
+                        
+                        <div className="space-y-2 col-span-2 mt-2 pt-4 border-t border-gray-800">
+                          <label className="text-sm font-medium text-blue-400 flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                            รอบการบำรุงรักษา (Maintenance Interval)
+                          </label>
+                          <div className="flex gap-2">
+                            <input
+                              type="number"
+                              value={formData.maintenance_interval || ''}
+                              onChange={(e) => setFormData({ ...formData, maintenance_interval: e.target.value })}
+                              placeholder={`แจ้งเตือนทุกๆ ... ${getMaintenanceUnitLabel(formData.maintenance_unit, false)}`}
+                              className="flex-1 bg-gray-900 border border-gray-800 text-white px-4 py-3 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none"
+                            />
+                            <div className="flex items-center px-4 bg-gray-900 border border-gray-800 rounded-xl text-gray-500 text-sm">
+                              ทุกๆ X {getMaintenanceUnitLabel(formData.maintenance_unit, false)}
+                            </div>
+                          </div>
+                          <p className="text-xs text-gray-500">
+                            * ระบบจะแจ้งเตือนอัตโนมัติเมื่อครบกำหนดรอบที่ตั้งไว้ (จากค่าเริ่มต้น {formData.initial_usage || 0})
+                          </p>
                         </div>
                       </div>
                     )}

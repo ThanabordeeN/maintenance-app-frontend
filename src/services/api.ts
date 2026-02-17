@@ -22,25 +22,40 @@ export const getImageUrl = (url: string) => {
   return `${baseUrl}${path}`;
 };
 
+// Helper for authenticated requests
+const authenticatedFetch = async (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem('token');
+  
+  const headers = {
+    ...((options.headers as Record<string, string>) || {}),
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+  };
+
+  return fetch(url, {
+    ...options,
+    headers,
+  });
+};
+
 // Equipment API
 export const equipmentAPI = {
   getAll: async (includeInactive = false): Promise<{ equipment: Equipment[] }> => {
     const url = includeInactive
       ? `${API_URL}/maintenance/equipment?includeInactive=true`
       : `${API_URL}/maintenance/equipment`;
-    const response = await fetch(url);
+    const response = await authenticatedFetch(url);
     if (!response.ok) throw new Error('Failed to fetch equipment');
     return response.json();
   },
 
   getById: async (id: number): Promise<{ equipment: Equipment }> => {
-    const response = await fetch(`${API_URL}/maintenance/equipment/${id}`);
+    const response = await authenticatedFetch(`${API_URL}/maintenance/equipment/${id}`);
     if (!response.ok) throw new Error('Equipment not found');
     return response.json();
   },
 
   create: async (data: Partial<Equipment>): Promise<{ equipment: Equipment }> => {
-    const response = await fetch(`${API_URL}/maintenance/equipment`, {
+    const response = await authenticatedFetch(`${API_URL}/maintenance/equipment`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
@@ -53,7 +68,7 @@ export const equipmentAPI = {
   },
 
   update: async (id: number, data: Partial<Equipment>): Promise<{ equipment: Equipment }> => {
-    const response = await fetch(`${API_URL}/maintenance/equipment/${id}`, {
+    const response = await authenticatedFetch(`${API_URL}/maintenance/equipment/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
@@ -69,7 +84,7 @@ export const equipmentAPI = {
     const url = permanent
       ? `${API_URL}/maintenance/equipment/${id}?permanent=true`
       : `${API_URL}/maintenance/equipment/${id}`;
-    const response = await fetch(url, { method: 'DELETE' });
+    const response = await authenticatedFetch(url, { method: 'DELETE' });
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.error || 'Failed to delete equipment');
@@ -78,7 +93,7 @@ export const equipmentAPI = {
   },
 
   toggle: async (id: number): Promise<{ success: boolean; equipment: Equipment; message: string }> => {
-    const response = await fetch(`${API_URL}/maintenance/equipment/${id}/toggle`, {
+    const response = await authenticatedFetch(`${API_URL}/maintenance/equipment/${id}/toggle`, {
       method: 'PATCH',
     });
     if (!response.ok) {
@@ -96,28 +111,28 @@ export const maintenanceAPI = {
     const url = status
       ? `${API_URL}/maintenance/records?status=${status}`
       : `${API_URL}/maintenance/records`;
-    const response = await fetch(url);
+    const response = await authenticatedFetch(url);
     if (!response.ok) throw new Error('Failed to fetch records');
     return response.json();
   },
 
   // Get summary stats
   getSummary: async (): Promise<MaintenanceSummary> => {
-    const response = await fetch(`${API_URL}/maintenance/summary`);
+    const response = await authenticatedFetch(`${API_URL}/maintenance/summary`);
     if (!response.ok) throw new Error('Failed to fetch summary');
     return response.json();
   },
 
   // Get record detail
   getById: async (id: string): Promise<any> => {
-    const response = await fetch(`${API_URL}/maintenance/records/${id}`);
+    const response = await authenticatedFetch(`${API_URL}/maintenance/records/${id}`);
     if (!response.ok) throw new Error('Record not found');
     return response.json();
   },
 
   // Create record (supports FormData for multiple images)
   create: async (data: FormData): Promise<any> => {
-    const response = await fetch(`${API_URL}/maintenance/records`, {
+    const response = await authenticatedFetch(`${API_URL}/maintenance/records`, {
       method: 'POST',
       body: data,
     });
@@ -131,7 +146,7 @@ export const maintenanceAPI = {
   // Update record (Supports FormData for status changes with images)
   update: async (id: string, data: UpdateMaintenanceDto | FormData): Promise<{ id: string; status: string }> => {
     const isFormData = data instanceof FormData;
-    const response = await fetch(`${API_URL}/maintenance/records/${id}`, {
+    const response = await authenticatedFetch(`${API_URL}/maintenance/records/${id}`, {
       method: 'PATCH',
       headers: isFormData ? {} : { 'Content-Type': 'application/json' },
       body: isFormData ? data : JSON.stringify(data),
@@ -145,7 +160,7 @@ export const maintenanceAPI = {
 
   // Add comment
   addComment: async (id: string, userId: number, comment: string): Promise<any> => {
-    const response = await fetch(`${API_URL}/maintenance/records/${id}/comments`, {
+    const response = await authenticatedFetch(`${API_URL}/maintenance/records/${id}/comments`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId, comment }),
@@ -156,7 +171,7 @@ export const maintenanceAPI = {
 
   // Delete record
   delete: async (id: string): Promise<{ success: boolean }> => {
-    const response = await fetch(`${API_URL}/maintenance/records/${id}`, {
+    const response = await authenticatedFetch(`${API_URL}/maintenance/records/${id}`, {
       method: 'DELETE',
     });
     if (!response.ok) throw new Error('Failed to delete record');
@@ -165,7 +180,7 @@ export const maintenanceAPI = {
 
   // Add progress update (with optional image)
   addProgressUpdate: async (id: string, formData: FormData): Promise<any> => {
-    const response = await fetch(`${API_URL}/maintenance/records/${id}/update`, {
+    const response = await authenticatedFetch(`${API_URL}/maintenance/records/${id}/update`, {
       method: 'POST',
       body: formData,
     });
@@ -178,7 +193,7 @@ export const maintenanceAPI = {
 
   // Update status
   updateStatus: async (id: string, status: string, data: any): Promise<any> => {
-    const response = await fetch(`${API_URL}/status/records/${id}/status`, {
+    const response = await authenticatedFetch(`${API_URL}/status/records/${id}/status`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status, ...data }),
@@ -200,7 +215,7 @@ export const statusAPI = {
     categories: { value: string; label: string }[];
     maintenanceTypes: MaintenanceTypeOption[];
   }> => {
-    const response = await fetch(`${API_URL}/status/options`);
+    const response = await authenticatedFetch(`${API_URL}/status/options`);
     if (!response.ok) throw new Error('Failed to fetch options');
     return response.json();
   },
@@ -209,7 +224,7 @@ export const statusAPI = {
 // Auth API
 export const authAPI = {
   verify: async (accessToken: string): Promise<{ success: boolean; user: any }> => {
-    const response = await fetch(`${API_URL}/auth/verify`, {
+    const response = await authenticatedFetch(`${API_URL}/auth/verify`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ accessToken }),
@@ -222,7 +237,7 @@ export const authAPI = {
   },
 
   registerUser: async (lineUserId: string, displayName?: string, email?: string): Promise<any> => {
-    const response = await fetch(`${API_URL}/auth/register-user`, {
+    const response = await authenticatedFetch(`${API_URL}/auth/register-user`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ lineUserId, displayName, email }),
@@ -235,7 +250,7 @@ export const authAPI = {
 export const usageAPI = {
   // Get usage logs by equipment
   getByEquipment: async (equipmentId: number, page = 1, limit = 10): Promise<{ logs: any[]; total: number; page: number; totalPages: number }> => {
-    const response = await fetch(`${API_URL}/maintenance/equipment/${equipmentId}/usage-logs?page=${page}&limit=${limit}`);
+    const response = await authenticatedFetch(`${API_URL}/maintenance/equipment/${equipmentId}/usage-logs?page=${page}&limit=${limit}`);
     if (!response.ok) throw new Error('Failed to fetch usage logs');
     return response.json();
   },
@@ -245,7 +260,7 @@ export const usageAPI = {
     const url = equipmentId
       ? `${API_URL}/maintenance/usage-logs?limit=${limit}&equipment_id=${equipmentId}`
       : `${API_URL}/maintenance/usage-logs?limit=${limit}`;
-    const response = await fetch(url);
+    const response = await authenticatedFetch(url);
     if (!response.ok) throw new Error('Failed to fetch usage logs');
     return response.json();
   },
@@ -258,7 +273,7 @@ export const usageAPI = {
 
     if (!equipmentId) throw new Error('Equipment ID is required');
 
-    const response = await fetch(`${API_URL}/maintenance/equipment/${equipmentId}/usage-logs`, {
+    const response = await authenticatedFetch(`${API_URL}/maintenance/equipment/${equipmentId}/usage-logs`, {
       method: 'POST',
       headers: isFormData ? {} : { 'Content-Type': 'application/json' },
       body: isFormData ? data : JSON.stringify(data),
@@ -276,7 +291,7 @@ export const usageAPI = {
     usage_value: number;
     notes?: string | null;
   }): Promise<{ log: any; message: string }> => {
-    const response = await fetch(`${API_URL}/maintenance/usage-logs/${logId}`, {
+    const response = await authenticatedFetch(`${API_URL}/maintenance/usage-logs/${logId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
@@ -292,13 +307,13 @@ export const usageAPI = {
 // Users API (for admins)
 export const usersAPI = {
   getAll: async (): Promise<{ users: any[] }> => {
-    const response = await fetch(`${API_URL}/users`);
+    const response = await authenticatedFetch(`${API_URL}/users`);
     if (!response.ok) throw new Error('Failed to fetch users');
     return response.json();
   },
 
   updateRole: async (id: number, role: string): Promise<any> => {
-    const response = await fetch(`${API_URL}/users/${id}/role`, {
+    const response = await authenticatedFetch(`${API_URL}/users/${id}/role`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ role }),
@@ -308,7 +323,7 @@ export const usersAPI = {
   },
 
   delete: async (id: number): Promise<any> => {
-    const response = await fetch(`${API_URL}/users/${id}`, {
+    const response = await authenticatedFetch(`${API_URL}/users/${id}`, {
       method: 'DELETE',
     });
     if (!response.ok) throw new Error('Failed to delete user');
@@ -331,7 +346,7 @@ export const reportsAPI = {
     if (params?.equipmentId) searchParams.append('equipmentId', params.equipmentId.toString());
 
     const url = `${API_URL}/reports/summary${searchParams.toString() ? '?' + searchParams.toString() : ''}`;
-    const response = await fetch(url);
+    const response = await authenticatedFetch(url);
     if (!response.ok) throw new Error('Failed to fetch summary');
     return response.json();
   },
@@ -342,7 +357,7 @@ export const reportsAPI = {
     if (params?.endDate) searchParams.append('endDate', params.endDate);
     if (params?.equipmentId) searchParams.append('equipmentId', params.equipmentId.toString());
 
-    const response = await fetch(`${API_URL}/reports/mtbf${searchParams.toString() ? '?' + searchParams.toString() : ''}`);
+    const response = await authenticatedFetch(`${API_URL}/reports/mtbf${searchParams.toString() ? '?' + searchParams.toString() : ''}`);
     if (!response.ok) throw new Error('Failed to fetch MTBF');
     return response.json();
   },
@@ -353,7 +368,7 @@ export const reportsAPI = {
     if (params?.endDate) searchParams.append('endDate', params.endDate);
     if (params?.equipmentId) searchParams.append('equipmentId', params.equipmentId.toString());
 
-    const response = await fetch(`${API_URL}/reports/mttr${searchParams.toString() ? '?' + searchParams.toString() : ''}`);
+    const response = await authenticatedFetch(`${API_URL}/reports/mttr${searchParams.toString() ? '?' + searchParams.toString() : ''}`);
     if (!response.ok) throw new Error('Failed to fetch MTTR');
     return response.json();
   },
@@ -364,7 +379,7 @@ export const reportsAPI = {
     if (params?.endDate) searchParams.append('endDate', params.endDate);
     if (params?.equipmentId) searchParams.append('equipmentId', params.equipmentId.toString());
 
-    const response = await fetch(`${API_URL}/reports/oee${searchParams.toString() ? '?' + searchParams.toString() : ''}`);
+    const response = await authenticatedFetch(`${API_URL}/reports/oee${searchParams.toString() ? '?' + searchParams.toString() : ''}`);
     if (!response.ok) throw new Error('Failed to fetch OEE');
     return response.json();
   },
@@ -374,7 +389,7 @@ export const reportsAPI = {
     if (month) searchParams.append('month', month.toString());
     if (year) searchParams.append('year', year.toString());
 
-    const response = await fetch(`${API_URL}/reports/calendar${searchParams.toString() ? '?' + searchParams.toString() : ''}`);
+    const response = await authenticatedFetch(`${API_URL}/reports/calendar${searchParams.toString() ? '?' + searchParams.toString() : ''}`);
     if (!response.ok) throw new Error('Failed to fetch calendar');
     return response.json();
   },
@@ -386,7 +401,7 @@ export const reportsAPI = {
     if (params?.equipmentId) searchParams.append('equipmentId', params.equipmentId.toString());
     if (params?.status) searchParams.append('status', params.status);
 
-    const response = await fetch(`${API_URL}/reports/export${searchParams.toString() ? '?' + searchParams.toString() : ''}`);
+    const response = await authenticatedFetch(`${API_URL}/reports/export${searchParams.toString() ? '?' + searchParams.toString() : ''}`);
     if (!response.ok) throw new Error('Failed to export data');
     return response.json();
   },
@@ -398,54 +413,54 @@ export const notificationsAPI = {
     const params = new URLSearchParams({ userId: userId.toString() });
     if (unreadOnly) params.append('unreadOnly', 'true');
 
-    const response = await fetch(`${API_URL}/notifications?${params.toString()}`);
+    const response = await authenticatedFetch(`${API_URL}/notifications?${params.toString()}`);
     if (!response.ok) throw new Error('Failed to fetch notifications');
     return response.json();
   },
 
   // Fast polling - uses noti_list from user data
   quickCheck: async (userId: number): Promise<{ notiList: Record<string, { status: string; type: string; title: string; created_at: string }>; unreadCount: number }> => {
-    const response = await fetch(`${API_URL}/notifications/quick/${userId}`);
+    const response = await authenticatedFetch(`${API_URL}/notifications/quick/${userId}`);
     if (!response.ok) throw new Error('Failed to quick check');
     return response.json();
   },
 
   // Mark as read using quick API
   quickMarkAsRead: async (userId: number, msgId: number): Promise<{ success: boolean }> => {
-    const response = await fetch(`${API_URL}/notifications/quick/${userId}/${msgId}/read`, { method: 'PATCH' });
+    const response = await authenticatedFetch(`${API_URL}/notifications/quick/${userId}/${msgId}/read`, { method: 'PATCH' });
     if (!response.ok) throw new Error('Failed to mark as read');
     return response.json();
   },
 
   // Mark all as read using quick API
   quickMarkAllAsRead: async (userId: number): Promise<{ success: boolean }> => {
-    const response = await fetch(`${API_URL}/notifications/quick/${userId}/read-all`, { method: 'PATCH' });
+    const response = await authenticatedFetch(`${API_URL}/notifications/quick/${userId}/read-all`, { method: 'PATCH' });
     if (!response.ok) throw new Error('Failed to mark all as read');
     return response.json();
   },
 
   // Delete single notification
   delete: async (userId: number, msgId: number): Promise<{ success: boolean }> => {
-    const response = await fetch(`${API_URL}/notifications/quick/${userId}/${msgId}`, { method: 'DELETE' });
+    const response = await authenticatedFetch(`${API_URL}/notifications/quick/${userId}/${msgId}`, { method: 'DELETE' });
     if (!response.ok) throw new Error('Failed to delete notification');
     return response.json();
   },
 
   // Clear all notifications
   clearAll: async (userId: number): Promise<{ success: boolean }> => {
-    const response = await fetch(`${API_URL}/notifications/quick/${userId}/clear-all`, { method: 'DELETE' });
+    const response = await authenticatedFetch(`${API_URL}/notifications/quick/${userId}/clear-all`, { method: 'DELETE' });
     if (!response.ok) throw new Error('Failed to clear all notifications');
     return response.json();
   },
 
   markAsRead: async (id: number): Promise<{ notification: any }> => {
-    const response = await fetch(`${API_URL}/notifications/${id}/read`, { method: 'PATCH' });
+    const response = await authenticatedFetch(`${API_URL}/notifications/${id}/read`, { method: 'PATCH' });
     if (!response.ok) throw new Error('Failed to mark as read');
     return response.json();
   },
 
   markAllAsRead: async (userId: number): Promise<{ message: string }> => {
-    const response = await fetch(`${API_URL}/notifications/read-all`, {
+    const response = await authenticatedFetch(`${API_URL}/notifications/read-all`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId }),
@@ -455,13 +470,13 @@ export const notificationsAPI = {
   },
 
   getPreferences: async (userId: number): Promise<{ preferences: any }> => {
-    const response = await fetch(`${API_URL}/notifications/preferences/${userId}`);
+    const response = await authenticatedFetch(`${API_URL}/notifications/preferences/${userId}`);
     if (!response.ok) throw new Error('Failed to fetch preferences');
     return response.json();
   },
 
   updatePreferences: async (userId: number, data: any): Promise<{ preferences: any }> => {
-    const response = await fetch(`${API_URL}/notifications/preferences/${userId}`, {
+    const response = await authenticatedFetch(`${API_URL}/notifications/preferences/${userId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
@@ -479,13 +494,13 @@ export const notificationsAPI = {
 // Setup API (for migrations)
 export const setupAPI = {
   migrate: async (): Promise<{ success: boolean; message: string; tables_created: string[] }> => {
-    const response = await fetch(`${API_URL}/setup/migrate`, { method: 'POST' });
+    const response = await authenticatedFetch(`${API_URL}/setup/migrate`, { method: 'POST' });
     if (!response.ok) throw new Error('Migration failed');
     return response.json();
   },
 
   getStatus: async (): Promise<{ tables: { name: string; count: number }[] }> => {
-    const response = await fetch(`${API_URL}/setup/status`);
+    const response = await authenticatedFetch(`${API_URL}/setup/status`);
     if (!response.ok) throw new Error('Failed to get status');
     return response.json();
   },
@@ -502,19 +517,19 @@ export const requisitionsAPI = {
     if (params?.from_date) searchParams.append('from_date', params.from_date);
     if (params?.to_date) searchParams.append('to_date', params.to_date);
 
-    const response = await fetch(`${API_URL}/requisitions${searchParams.toString() ? '?' + searchParams.toString() : ''}`);
+    const response = await authenticatedFetch(`${API_URL}/requisitions${searchParams.toString() ? '?' + searchParams.toString() : ''}`);
     if (!response.ok) throw new Error('Failed to fetch requisitions');
     return response.json();
   },
 
   getById: async (id: number): Promise<{ requisition: any; items: any[] }> => {
-    const response = await fetch(`${API_URL}/requisitions/${id}`);
+    const response = await authenticatedFetch(`${API_URL}/requisitions/${id}`);
     if (!response.ok) throw new Error('Requisition not found');
     return response.json();
   },
 
   getByMaintenance: async (maintenanceId: number): Promise<{ requisitions: any[] }> => {
-    const response = await fetch(`${API_URL}/requisitions/by-maintenance/${maintenanceId}`);
+    const response = await authenticatedFetch(`${API_URL}/requisitions/by-maintenance/${maintenanceId}`);
     if (!response.ok) throw new Error('Failed to fetch requisitions');
     return response.json();
   },
@@ -533,7 +548,7 @@ export const requisitionsAPI = {
       notes?: string;
     }>;
   }): Promise<{ success: boolean; requisition: any; pr_number: string }> => {
-    const response = await fetch(`${API_URL}/requisitions`, {
+    const response = await authenticatedFetch(`${API_URL}/requisitions`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
@@ -546,7 +561,7 @@ export const requisitionsAPI = {
   },
 
   approve: async (id: number, approved_by: number): Promise<{ success: boolean; all_stock_available: boolean; stock_issues: any[] }> => {
-    const response = await fetch(`${API_URL}/requisitions/${id}/approve`, {
+    const response = await authenticatedFetch(`${API_URL}/requisitions/${id}/approve`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ approved_by, userId: approved_by }),
@@ -559,7 +574,7 @@ export const requisitionsAPI = {
   },
 
   reject: async (id: number, approved_by: number, rejection_reason: string): Promise<{ success: boolean }> => {
-    const response = await fetch(`${API_URL}/requisitions/${id}/reject`, {
+    const response = await authenticatedFetch(`${API_URL}/requisitions/${id}/reject`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ approved_by, rejection_reason, userId: approved_by }),
@@ -572,7 +587,7 @@ export const requisitionsAPI = {
   },
 
   cancel: async (id: number, cancelled_by: number, reason: string): Promise<{ success: boolean }> => {
-    const response = await fetch(`${API_URL}/requisitions/${id}/cancel`, {
+    const response = await authenticatedFetch(`${API_URL}/requisitions/${id}/cancel`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ cancelled_by, reason }),
