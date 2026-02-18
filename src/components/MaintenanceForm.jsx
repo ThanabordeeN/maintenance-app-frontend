@@ -127,33 +127,86 @@ const MaintenanceForm = ({ userId, onSuccess, onCancel, initialData }) => {
     }
   };
 
-  const handleImageSelect = (e) => {
-    const files = Array.from(e.target.files);
-    if (files.length > 0) {
-      const remainingSlots = 5 - selectedImages.length;
-      const filesToAdd = files.slice(0, remainingSlots);
-
-      if (files.length > remainingSlots) {
-        alert('อัปโหลดรูปภาพได้สูงสุด 5 รูป');
+  const compressImage = (file) => {
+    return new Promise((resolve) => {
+      // HEIC/HEIF from iPhones may report empty MIME type — treat them as images anyway
+      const isImage = file.type.startsWith('image/') || file.name.match(/\.(heic|heif)$/i);
+      if (!isImage) {
+        resolve(null);
+        return;
       }
 
-      filesToAdd.forEach(file => {
-        if (file.size > 10 * 1024 * 1024) {
-          alert(`ไฟล์ ${file.name} มีขนาดเกิน 10MB`);
-          return;
-        }
-        if (!file.type.startsWith('image/')) {
-          alert(`ไฟล์ ${file.name} ไม่ใช่ไฟล์รูปภาพที่รองรับ`);
-          return;
-        }
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          const MAX_SIZE = 1920;
+          let { width, height } = img;
 
-        setSelectedImages(prev => [...prev, file]);
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setImagePreviews(prev => [...prev, reader.result]);
+          if (width > MAX_SIZE || height > MAX_SIZE) {
+            if (width > height) {
+              height = Math.round((height * MAX_SIZE) / width);
+              width = MAX_SIZE;
+            } else {
+              width = Math.round((width * MAX_SIZE) / height);
+              height = MAX_SIZE;
+            }
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          canvas.toBlob(
+            (blob) => {
+              if (!blob) { resolve(file); return; }
+              const compressed = new File([blob], file.name.replace(/\.(heic|heif)$/i, '.jpg'), {
+                type: 'image/jpeg',
+                lastModified: Date.now(),
+              });
+              const preview = canvas.toDataURL('image/jpeg', 0.8);
+              resolve({ file: compressed, preview });
+            },
+            'image/jpeg',
+            0.8
+          );
         };
-        reader.readAsDataURL(file);
-      });
+        img.onerror = () => resolve(null);
+        img.src = event.target.result;
+      };
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleImageSelect = async (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+
+    const remainingSlots = 5 - selectedImages.length;
+    const filesToAdd = files.slice(0, remainingSlots);
+
+    if (files.length > remainingSlots) {
+      alert('อัปโหลดรูปภาพได้สูงสุด 5 รูป');
+    }
+
+    for (const file of filesToAdd) {
+      const isImage = file.type.startsWith('image/') || file.name.match(/\.(heic|heif)$/i);
+      if (!isImage) {
+        alert(`ไฟล์ ${file.name} ไม่ใช่ไฟล์รูปภาพที่รองรับ`);
+        continue;
+      }
+
+      const result = await compressImage(file);
+      if (!result) {
+        alert(`ไม่สามารถโหลดไฟล์ ${file.name} ได้`);
+        continue;
+      }
+
+      setSelectedImages(prev => [...prev, result.file]);
+      setImagePreviews(prev => [...prev, result.preview]);
     }
   };
 

@@ -182,15 +182,27 @@ const EquipmentManagement = ({ profile }) => {
   };
 
   const handleDelete = async (item) => {
-    if (!confirm(`คุณต้องการลบเครื่องจักร "${item.equipment_name || item.equipment_code}" หรือไม่?`)) {
+    if (!confirm(`คุณต้องการลบเครื่องจักร "${item.equipment_name || item.equipment_code}" หรือไม่?\n\nการลบจะไม่สามารถกู้คืนได้`)) {
       return;
     }
 
     try {
-      await equipmentAPI.delete(item.equipment_id);
+      await equipmentAPI.delete(item.equipment_id, true);
       fetchEquipment();
     } catch (err) {
-      alert(err.message);
+      // If hard delete fails (has maintenance records), fall back to soft delete
+      if (err.message?.includes('maintenance records')) {
+        if (confirm('เครื่องจักรนี้มีประวัติการซ่อมบำรุง ไม่สามารถลบออกได้\n\nต้องการปิดการใช้งานแทนหรือไม่?')) {
+          try {
+            await equipmentAPI.delete(item.equipment_id, false);
+            fetchEquipment();
+          } catch (fallbackErr) {
+            alert(fallbackErr.message);
+          }
+        }
+      } else {
+        alert(err.message);
+      }
     }
   };
 
