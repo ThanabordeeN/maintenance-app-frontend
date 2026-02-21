@@ -76,6 +76,11 @@ const EquipmentManagement = ({ profile }) => {
   };
 
   const getMaintenanceStatus = (item) => {
+    // If backend provided a direct status (like from /api/pm-status) we can respect it here if mapped
+    if (item.status === 'overdue') return { status: 'overdue', label: 'เกินกำหนด!', color: 'red', remaining: 0 };
+    if (item.status === 'approaching') return { status: 'close', label: 'ใกล้ถึงกำหนด', color: 'yellow', remaining: null };
+    if (item.status === 'warning') return { status: 'close', label: 'ใกล้ถึงกำหนด', color: 'yellow', remaining: null };
+
     if (!item.maintenance_unit || !item.maintenance_schedules || item.maintenance_schedules.length === 0) {
       return { status: 'none', label: 'ยังไม่ตั้งค่า', color: 'gray', remaining: null };
     }
@@ -93,9 +98,13 @@ const EquipmentManagement = ({ profile }) => {
       const nextDue = startFrom + ((completedCycles + 1) * interval);
       const remaining = nextDue - currentUsage;
 
+      const currentUsagePercentage = (interval - remaining) / interval;
+      const reached80Percent = currentUsagePercentage >= 0.8;
+
       if (remaining < 0) {
         return { status: 'overdue', label: 'เกินกำหนด!', color: 'red', remaining: Math.abs(remaining) };
-      } else if (remaining <= interval * 0.2) {
+      } else if (reached80Percent || remaining <= interval * 0.2 || remaining <= 24) {
+        // Fallback frontend mirror: checks 80%, interval * 20%, or absolute 24 remaining.
         if (worstStatus.status !== 'overdue' && remaining < worstStatus.remaining) {
           worstStatus = { status: 'close', label: 'ใกล้ถึงกำหนด', color: 'yellow', remaining };
         }
