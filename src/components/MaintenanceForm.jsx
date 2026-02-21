@@ -220,7 +220,7 @@ const MaintenanceForm = ({ userId, onSuccess, onCancel, initialData }) => {
 
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black animate-in fade-in duration-200 flex flex-col h-[100dvh]">
+    <div className="fixed inset-0 z-[100] bg-black animate-in fade-in duration-200 flex flex-col">
       {/* Success Toast */}
       {showSuccess && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-emerald-600 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-top-full duration-300">
@@ -506,7 +506,7 @@ const MaintenanceForm = ({ userId, onSuccess, onCancel, initialData }) => {
       </main>
 
       {/* Footer */}
-      <footer className="fixed bottom-0 left-0 right-0 bg-zinc-950 border-t border-zinc-800/50 p-4 pb-8">
+      <footer className="flex-none bg-zinc-950 border-t border-zinc-800/50 p-4 pb-8">
         {currentStep === 3 ? (
           <div className="flex gap-3">
             <button
