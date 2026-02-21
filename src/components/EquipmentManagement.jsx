@@ -745,8 +745,8 @@ const EquipmentManagement = ({ profile }) => {
       {/* Create/Edit Modal - Step-by-Step Wizard - Full Screen on Mobile */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm p-0 sm:p-4">
-          <Card className="w-full h-full sm:h-auto sm:max-w-lg border-gray-800 shadow-2xl animate-in slide-in-from-bottom duration-300 sm:zoom-in sm:max-h-[90vh] overflow-hidden flex flex-col sm:block bg-gray-950">
-            <CardHeader className="bg-gradient-to-r from-blue-600 to-blue-500 text-white p-5">
+          <Card className="w-full h-full sm:h-auto sm:max-w-lg border-gray-800 shadow-2xl animate-in slide-in-from-bottom duration-300 sm:zoom-in sm:max-h-[90vh] overflow-hidden flex flex-col bg-gray-950">
+            <CardHeader className="bg-gradient-to-r from-blue-600 to-blue-500 text-white p-5 flex-shrink-0">
               <div className="flex justify-between items-center">
                 <div>
                   <CardTitle className="text-xl font-bold">
@@ -798,7 +798,7 @@ const EquipmentManagement = ({ profile }) => {
               </div>
             </CardHeader>
 
-            <form onSubmit={handleSubmit} className="flex-1 flex flex-col overflow-hidden">
+            <form onSubmit={handleSubmit} className="flex-1 flex flex-col overflow-hidden min-h-0">
               <CardContent className="p-5 space-y-5 bg-gray-950 flex-1 overflow-y-auto">
                 {error && (
                   <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 text-red-400">
@@ -1063,8 +1063,8 @@ const EquipmentManagement = ({ profile }) => {
       {/* Maintenance Schedules Modal - Full Screen on Mobile */}
       {showSchedulesModal && selectedEquipment && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm p-0 sm:p-4">
-          <Card className="w-full h-full sm:h-auto sm:max-w-2xl border-gray-800 shadow-2xl animate-in slide-in-from-bottom duration-300 sm:zoom-in sm:max-h-[90vh] overflow-hidden flex flex-col sm:block bg-gray-950">
-            <CardHeader className="bg-gradient-to-r from-green-600 to-green-500 text-white p-5">
+          <Card className="w-full h-full sm:h-auto sm:max-w-2xl border-gray-800 shadow-2xl animate-in slide-in-from-bottom duration-300 sm:zoom-in sm:max-h-[90vh] overflow-hidden flex flex-col bg-gray-950">
+            <CardHeader className="bg-gradient-to-r from-green-600 to-green-500 text-white p-5 flex-shrink-0">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-3">
                   <div className="text-3xl">{getEquipmentIcon(selectedEquipment.equipment_type)}</div>
@@ -1091,7 +1091,7 @@ const EquipmentManagement = ({ profile }) => {
               </div>
             </CardHeader>
 
-            <CardContent className="p-5 space-y-5 bg-gray-950 flex-1 overflow-y-auto">
+            <CardContent className="p-5 space-y-5 bg-gray-950 flex-1 overflow-y-auto min-h-0">
               {/* Equipment Info */}
               <div className="grid grid-cols-2 gap-4 p-4 bg-gray-900/50 rounded-xl">
                 <div>
@@ -1394,7 +1394,7 @@ const EquipmentManagement = ({ profile }) => {
               )}
             </CardContent>
 
-            <div className="flex gap-3 p-5 bg-gray-950 border-t border-gray-800">
+            <div className="flex gap-3 p-5 bg-gray-950 border-t border-gray-800 flex-shrink-0">
               <Button
                 variant="ghost"
                 className="flex-1"
