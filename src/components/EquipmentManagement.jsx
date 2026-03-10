@@ -477,13 +477,9 @@ const EquipmentManagement = ({ profile }) => {
                   {overdueEquipment.map(e => e.equipment_name || e.equipment_code).join(', ')}
                 </p>
               </div>
-              <Button
-                size="sm"
-                className="bg-red-500 hover:bg-red-600 text-white"
-                onClick={() => handleOpenSchedules(overdueEquipment[0])}
-              >
-                ดูรายละเอียด
-              </Button>
+              <span className="text-xs text-red-300 bg-red-500/20 border border-red-500/30 rounded-lg px-3 py-2">
+                โปรดติดต่อผู้ดูแลเพื่อจัดการรอบบำรุงรักษา
+              </span>
             </div>
           </CardContent>
         </Card>
@@ -691,21 +687,6 @@ const EquipmentManagement = ({ profile }) => {
 
                     {/* Action Buttons - Always visible, large touch targets */}
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4 pt-4 border-t border-gray-800/50">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleOpenSchedules(item)}
-                        className={`justify-center py-3 ${maintenanceStatus.status === 'overdue'
-                          ? 'text-red-400 hover:bg-red-500/10 border-red-500/30'
-                          : maintenanceStatus.status === 'close'
-                            ? 'text-yellow-400 hover:bg-yellow-500/10 border-yellow-500/30'
-                            : 'text-green-400 hover:bg-green-500/10 border-green-500/30'
-                          } border`}
-                      >
-                        <Calendar size={18} className="mr-1.5" />
-                        <span className="hidden sm:inline">รอบ</span>บำรุงรักษา
-                      </Button>
-
                       <Button
                         variant="ghost"
                         size="sm"
@@ -966,6 +947,9 @@ const EquipmentManagement = ({ profile }) => {
                           <label className="text-sm font-medium text-gray-300">
                             ค่าเริ่มต้น ({getMaintenanceUnitLabel(formData.maintenance_unit, false)})
                           </label>
+                          <p className="text-xs text-amber-300/90 bg-amber-500/10 border border-amber-500/20 rounded-md px-2 py-1">
+                            ค่าเริ่มต้น = ค่าที่อ่านได้จากมิเตอร์ตอนเริ่มใช้งาน/เริ่มเก็บข้อมูล
+                          </p>
                           <input
                             type="number"
                             step="0.01"
@@ -979,6 +963,9 @@ const EquipmentManagement = ({ profile }) => {
                           <label className="text-sm font-medium text-gray-300">
                             ค่าปัจจุบัน ({getMaintenanceUnitLabel(formData.maintenance_unit, false)})
                           </label>
+                          <p className="text-xs text-blue-300/90 bg-blue-500/10 border border-blue-500/20 rounded-md px-2 py-1">
+                            ค่าปัจจุบัน = ค่ามิเตอร์ ณ ตอนนี้ (ระบบตีความเป็น ค่าเริ่มต้น + ชั่วโมง/ระยะ/รอบ ที่ใช้งานเพิ่ม)
+                          </p>
                           <input
                             type="number"
                             step="0.01"
@@ -1241,17 +1228,7 @@ const EquipmentManagement = ({ profile }) => {
                     );
                   })}
 
-                  {/* Add Schedule Button */}
-                  {!isAddingSchedule && (
-                    <Button
-                      variant="outline"
-                      className="w-full border-dashed border-green-500/30 text-green-400 hover:bg-green-500/10 py-3"
-                      onClick={() => setIsAddingSchedule(true)}
-                    >
-                      <Plus size={18} className="mr-2" />
-                      เพิ่มรอบบำรุงรักษาใหม่
-                    </Button>
-                  )}
+                  {/* Add Schedule button removed by request */}
 
                   {/* Add Schedule Form */}
                   {isAddingSchedule && (
@@ -1326,16 +1303,7 @@ const EquipmentManagement = ({ profile }) => {
                     </p>
                   </div>
 
-                  {/* Add Schedule Button */}
-                  {!isAddingSchedule && (
-                    <Button
-                      className="w-full bg-green-600 hover:bg-green-500 py-4"
-                      onClick={() => setIsAddingSchedule(true)}
-                    >
-                      <Plus size={20} className="mr-2" />
-                      เพิ่มรอบบำรุงรักษาแรก
-                    </Button>
-                  )}
+                  {/* Add first schedule button removed by request */}
 
                   {/* Add Schedule Form */}
                   {isAddingSchedule && (
@@ -1415,15 +1383,7 @@ const EquipmentManagement = ({ profile }) => {
               >
                 ปิด
               </Button>
-              {selectedEquipment.maintenance_unit && !isAddingSchedule && (
-                <Button
-                  className="flex-1 bg-green-600 hover:bg-green-500"
-                  onClick={() => setIsAddingSchedule(true)}
-                >
-                  <Plus size={16} className="mr-2" />
-                  เพิ่มรอบใหม่
-                </Button>
-              )}
+              {/* Footer add-schedule button removed by request */}
             </div>
           </Card>
         </div>
