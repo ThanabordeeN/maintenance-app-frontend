@@ -156,7 +156,7 @@ const MaintenanceDetail = ({ recordId, onClose, userId }) => {
       setUpdateNotes('');
       setUpdateImages([]);
       setUpdateImagePreviews([]);
-    } catch (_error) {
+    } catch {
       alert('ไม่สามารถบันทึกได้');
     } finally {
       setIsSubmitting(false);
