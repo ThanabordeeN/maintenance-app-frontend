@@ -11,7 +11,7 @@ const MaintenanceDetail = ({ recordId, onClose, userId }) => {
   const [activeModal, setActiveModal] = useState(null); // 'complete', 'start', 'hold', 'cancel', 'update', 'checklist'
   const [updateNotes, setUpdateNotes] = useState('');
   const [updateImages, setUpdateImages] = useState([]);
-  const [updateImagePreviews, setUpdateImagePreviews] = useState([]);
+  const [_updateImagePreviews, setUpdateImagePreviews] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
   const [expandedSections, setExpandedSections] = useState({
@@ -140,7 +140,7 @@ const MaintenanceDetail = ({ recordId, onClose, userId }) => {
     }
   };
 
-  const handleProgressUpdate = async () => {
+  const _handleProgressUpdate = async () => {
     if (isSubmitting) return; // Prevent double submit
     if (!updateNotes.trim()) return;
     setIsSubmitting(true);
@@ -156,7 +156,7 @@ const MaintenanceDetail = ({ recordId, onClose, userId }) => {
       setUpdateNotes('');
       setUpdateImages([]);
       setUpdateImagePreviews([]);
-    } catch (error) {
+    } catch (_error) {
       alert('ไม่สามารถบันทึกได้');
     } finally {
       setIsSubmitting(false);

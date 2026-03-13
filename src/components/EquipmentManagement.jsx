@@ -224,7 +224,7 @@ const EquipmentManagement = ({ profile }) => {
     }
   };
 
-  const handleOpenSchedules = (item) => {
+  const _handleOpenSchedules = (item) => {
     setSelectedEquipment(item);
     setIsAddingSchedule(false);
     setNewSchedule({ interval_value: '', start_from_usage: '', description: '' });

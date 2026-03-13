@@ -29,7 +29,6 @@ import {
   ZoomIn
 } from 'lucide-react';
 import { usageAPI, equipmentAPI, getImageUrl } from '../services/api';
-import { formatThaiDateTime } from '../lib/utils';
 import MaintenanceForm from './MaintenanceForm';
 
 export default function UsageLog({ onClose, userId }) {
@@ -56,7 +55,7 @@ export default function UsageLog({ onClose, userId }) {
   const [logCondition, setLogCondition] = useState('normal');
   const [logImage, setLogImage] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
-  const [previewImage, setPreviewImage] = useState(null);
+  const [_previewImage, setPreviewImage] = useState(null);
   const fileInputRef = useRef(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);

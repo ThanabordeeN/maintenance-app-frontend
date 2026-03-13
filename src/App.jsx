@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { RefreshCcw, AlertTriangle, Ban, ClipboardCopy, Wrench, X, Plus, LogOut, ChevronLeft, Gauge, Crown, Shield, Eye } from 'lucide-react';
 import useLiff from './hooks/useLiff';
 import MaintenanceList from './components/MaintenanceList';
