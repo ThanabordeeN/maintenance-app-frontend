@@ -6,7 +6,7 @@ import { formatThaiDateTime } from '../lib/utils';
 export default function NotificationBell({ profile, onViewChange, onSelectRecord }) {
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
-  const [notiList, setNotiList] = useState({});
+  const [_notiList, setNotiList] = useState({});
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const dropdownRef = useRef(null);
