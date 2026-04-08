@@ -1,6 +1,6 @@
-import { X, Clock, Wrench, CheckCircle, Play, Pause, XCircle, RotateCcw, Package, TrendingUp, History, MapPin, Camera, ClipboardCheck, ChevronDown, ChevronUp, Loader2, AlertCircle, ArrowLeft } from 'lucide-react';
+import { X, Clock, Wrench, CheckCircle, Play, Pause, XCircle, RotateCcw, Package, TrendingUp, History, MapPin, Camera, ClipboardCheck, ChevronDown, ChevronUp, Loader2, AlertCircle, ArrowLeft, Video, ImagePlus, Trash2, UserCheck, UserPlus, Users } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { maintenanceAPI, getImageUrl } from '../services/api';
+import { maintenanceAPI, usersAPI, getImageUrl } from '../services/api';
 import { formatThaiDateTime } from '../lib/utils';
 import ProgressUpdateModal from './ProgressUpdateModal';
 
@@ -14,6 +14,10 @@ const MaintenanceDetail = ({ recordId, onClose, userId }) => {
   const [_updateImagePreviews, setUpdateImagePreviews] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
+  const [previewVideo, setPreviewVideo] = useState(null);
+  const [users, setUsers] = useState([]);
+  const [showAssignPicker, setShowAssignPicker] = useState(false);
+  const [isAssigning, setIsAssigning] = useState(false);
   const [expandedSections, setExpandedSections] = useState({
     equipment: false,
     history: false,
@@ -22,11 +26,14 @@ const MaintenanceDetail = ({ recordId, onClose, userId }) => {
 
   // Form data for complete job
   const [completeForm, setCompleteForm] = useState({ rootCause: '', actionTaken: '' });
+  const [completionFiles, setCompletionFiles] = useState([]);
+  const [completionPreviews, setCompletionPreviews] = useState([]);
   const [holdReason, setHoldReason] = useState('');
   const [cancelReason, setCancelReason] = useState('');
 
   useEffect(() => {
     fetchRecordDetail();
+    usersAPI.getAll().then(res => setUsers(res.users || [])).catch(() => {});
   }, [recordId]);
 
   const fetchRecordDetail = async () => {
@@ -57,27 +64,76 @@ const MaintenanceDetail = ({ recordId, onClose, userId }) => {
   };
 
   const handleCompleteJob = async () => {
-    if (isSubmitting) return; // Prevent double submit
+    if (isSubmitting) return;
     if (!completeForm.rootCause.trim() || !completeForm.actionTaken.trim()) {
       alert('กรุณากรอกสาเหตุและวิธีแก้ไข');
       return;
     }
     setIsSubmitting(true);
     try {
-      await maintenanceAPI.update(recordId, {
-        status: 'completed',
-        userId,
-        rootCause: completeForm.rootCause,
-        actionTaken: completeForm.actionTaken
-      });
+      const formData = new FormData();
+      formData.append('status', 'completed');
+      formData.append('userId', userId);
+      formData.append('rootCause', completeForm.rootCause);
+      formData.append('actionTaken', completeForm.actionTaken);
+      completionFiles.forEach(file => formData.append('images', file));
+
+      await maintenanceAPI.update(recordId, formData);
       await fetchRecordDetail();
       setActiveModal(null);
       setCompleteForm({ rootCause: '', actionTaken: '' });
+      setCompletionFiles([]);
+      setCompletionPreviews([]);
     } catch (error) {
       alert('ไม่สามารถปิดงานได้: ' + error.message);
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleCompletionFileChange = (e) => {
+    const selected = Array.from(e.target.files);
+    const remaining = 5 - completionFiles.length;
+    const toAdd = selected.slice(0, remaining);
+
+    setCompletionFiles(prev => [...prev, ...toAdd]);
+
+    toAdd.forEach(file => {
+      const isVideo = file.type.startsWith('video/');
+      if (isVideo) {
+        setCompletionPreviews(prev => [...prev, { type: 'video', url: URL.createObjectURL(file), name: file.name }]);
+      } else {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          setCompletionPreviews(prev => [...prev, { type: 'image', url: ev.target.result, name: file.name }]);
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    e.target.value = '';
+  };
+
+  const handleAssign = async (assignedToUserId) => {
+    setIsAssigning(true);
+    setShowAssignPicker(false);
+    try {
+      await maintenanceAPI.update(recordId, { assignedTo: assignedToUserId, userId });
+      await fetchRecordDetail();
+    } catch (error) {
+      alert('ไม่สามารถมอบหมายงานได้: ' + error.message);
+    } finally {
+      setIsAssigning(false);
+    }
+  };
+
+  const removeCompletionFile = (index) => {
+    setCompletionFiles(prev => prev.filter((_, i) => i !== index));
+    setCompletionPreviews(prev => {
+      const removed = prev[index];
+      if (removed?.url?.startsWith('blob:')) URL.revokeObjectURL(removed.url);
+      return prev.filter((_, i) => i !== index);
+    });
   };
 
   const handleHoldJob = async () => {
@@ -311,6 +367,55 @@ const MaintenanceDetail = ({ recordId, onClose, userId }) => {
               className="w-full h-28 px-4 py-3 bg-zinc-900 border-2 border-zinc-800 rounded-xl text-white focus:outline-none focus:border-emerald-500 resize-none"
             />
           </div>
+
+          {/* Media Upload */}
+          <div>
+            <label className="block text-sm font-medium text-zinc-300 mb-2">
+              รูปภาพ / วิดีโอ หลังซ่อม
+              <span className="text-zinc-500 font-normal ml-2">({completionFiles.length}/5)</span>
+            </label>
+
+            {completionPreviews.length > 0 && (
+              <div className="grid grid-cols-3 gap-2 mb-3">
+                {completionPreviews.map((preview, idx) => (
+                  <div key={idx} className="relative aspect-square rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800">
+                    {preview.type === 'video' ? (
+                      <div className="w-full h-full flex flex-col items-center justify-center gap-1 bg-zinc-800">
+                        <Video size={24} className="text-sky-400" />
+                        <p className="text-[9px] text-zinc-400 px-1 truncate w-full text-center">{preview.name}</p>
+                      </div>
+                    ) : (
+                      <img src={preview.url} alt="" className="w-full h-full object-cover" />
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => removeCompletionFile(idx)}
+                      className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/70 flex items-center justify-center"
+                    >
+                      <Trash2 size={12} className="text-red-400" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {completionFiles.length < 5 && (
+              <label className="flex items-center gap-3 p-4 rounded-xl bg-zinc-900 border-2 border-dashed border-zinc-700 cursor-pointer active:bg-zinc-800">
+                <ImagePlus size={20} className="text-emerald-500 shrink-0" />
+                <div>
+                  <p className="text-sm text-zinc-300 font-medium">เพิ่มรูปภาพหรือวิดีโอ</p>
+                  <p className="text-xs text-zinc-500">สูงสุด 5 ไฟล์ • รูปภาพ / วิดีโอ</p>
+                </div>
+                <input
+                  type="file"
+                  accept="image/*,video/*"
+                  multiple
+                  className="hidden"
+                  onChange={handleCompletionFileChange}
+                />
+              </label>
+            )}
+          </div>
         </main>
         <footer className="flex-none bg-zinc-950 border-t border-zinc-800/50 p-4 pb-8">
           <div className="flex gap-3">
@@ -474,7 +579,7 @@ const MaintenanceDetail = ({ recordId, onClose, userId }) => {
   // ================== MAIN VIEW ==================
   return (
     <>
-      <div className="fixed inset-0 z-50 flex flex-col bg-black">
+      <div className="fixed inset-0 z-50 flex flex-col bg-black" onClick={() => setShowAssignPicker(false)}>
 
         {/* Header */}
         <header className="flex-none bg-zinc-950 border-b border-zinc-800/50 px-4 py-3">
@@ -516,6 +621,64 @@ const MaintenanceDetail = ({ recordId, onClose, userId }) => {
             </div>
           </div>
 
+          {/* Assigned To */}
+          <div className="px-4 pb-4">
+            <div className="flex items-center justify-between p-4 rounded-2xl bg-zinc-900 border border-zinc-800">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-600/20 flex items-center justify-center overflow-hidden shrink-0">
+                  {record.assigned_to_picture
+                    ? <img src={record.assigned_to_picture} className="w-full h-full object-cover" alt="" />
+                    : <UserCheck size={20} className="text-blue-400" />}
+                </div>
+                <div>
+                  <p className="text-xs text-zinc-500">ผู้รับผิดชอบ</p>
+                  <p className="text-sm font-semibold text-white">
+                    {record.assigned_to_name || <span className="text-zinc-500 font-normal">ยังไม่ได้มอบหมาย</span>}
+                  </p>
+                </div>
+              </div>
+              <div className="relative">
+                <button
+                  onClick={() => setShowAssignPicker(p => !p)}
+                  disabled={isAssigning}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-blue-600/20 border border-blue-500/30 text-blue-400 text-xs font-semibold active:scale-95 disabled:opacity-50"
+                >
+                  {isAssigning ? <Loader2 size={14} className="animate-spin" /> : <UserPlus size={14} />}
+                  มอบหมาย
+                </button>
+                {showAssignPicker && (
+                  <div className="absolute right-0 top-full mt-2 z-50 w-52 bg-zinc-900 border border-zinc-700 rounded-2xl shadow-2xl overflow-hidden">
+                    <div className="p-2 space-y-1">
+                      {users.map(u => (
+                        <button
+                          key={u.id}
+                          onClick={() => handleAssign(u.id)}
+                          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left active:bg-zinc-700 transition-colors ${record.assigned_to === u.id ? 'bg-blue-500/15 text-blue-400' : 'text-zinc-300 hover:bg-zinc-800'}`}
+                        >
+                          <div className="w-8 h-8 rounded-full bg-zinc-700 flex items-center justify-center overflow-hidden shrink-0">
+                            {u.picture_url ? <img src={u.picture_url} className="w-full h-full object-cover" alt="" /> : <Users size={14} className="text-zinc-400" />}
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium leading-tight">{u.display_name}</p>
+                            <p className="text-[11px] text-zinc-500">{u.role}</p>
+                          </div>
+                        </button>
+                      ))}
+                      {record.assigned_to && (
+                        <button
+                          onClick={() => handleAssign(null)}
+                          className="w-full px-3 py-2 rounded-xl text-xs text-red-400 text-left border-t border-zinc-800 mt-1 active:bg-zinc-800"
+                        >
+                          ยกเลิกการมอบหมาย
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
           {/* Problem Description */}
           <div className="px-4 pb-4">
             <div className="p-4 rounded-2xl bg-zinc-900 border border-zinc-800">
@@ -544,9 +707,34 @@ const MaintenanceDetail = ({ recordId, onClose, userId }) => {
                   </div>
                 )}
                 {record.action_taken && (
-                  <div>
+                  <div className="mb-3">
                     <p className="text-xs text-zinc-500 mb-1">วิธีแก้ไข:</p>
                     <p className="text-white">{record.action_taken}</p>
+                  </div>
+                )}
+                {/* After-repair media */}
+                {images.filter(img => img.image_type === 'after').length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-emerald-500/20">
+                    <p className="text-xs text-zinc-500 mb-2">รูปภาพ/วิดีโอหลังซ่อม:</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {images.filter(img => img.image_type === 'after').map((img, idx) => {
+                        const url = getImageUrl(img.image_url);
+                        const isVideo = /\.(mp4|mov|avi|webm|3gp|mkv)$/i.test(img.image_url);
+                        return (
+                          <div
+                            key={idx}
+                            className="aspect-square rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800 cursor-pointer active:scale-95"
+                            onClick={() => !isVideo && setPreviewImage(url)}
+                          >
+                            {isVideo ? (
+                              <video src={url} className="w-full h-full object-cover" controls playsInline />
+                            ) : (
+                              <img src={url} alt="" className="w-full h-full object-cover" />
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
               </div>
@@ -592,7 +780,7 @@ const MaintenanceDetail = ({ recordId, onClose, userId }) => {
             )}
           </div>
 
-          {/* Collapsible: Images */}
+          {/* Collapsible: Images & Videos */}
           {images.length > 0 && (
             <div className="px-4 pb-2">
               <button onClick={() => toggleSection('images')} className="w-full flex items-center justify-between p-4 rounded-2xl bg-zinc-900 border border-zinc-800 active:bg-zinc-800">
@@ -601,19 +789,32 @@ const MaintenanceDetail = ({ recordId, onClose, userId }) => {
                     <Camera size={20} className="text-sky-500" />
                   </div>
                   <div className="text-left">
-                    <p className="text-white font-medium">รูปภาพ</p>
-                    <p className="text-xs text-zinc-500">{images.length} รูป</p>
+                    <p className="text-white font-medium">รูปภาพ / วิดีโอ</p>
+                    <p className="text-xs text-zinc-500">{images.length} ไฟล์</p>
                   </div>
                 </div>
                 {expandedSections.images ? <ChevronUp size={20} className="text-zinc-500" /> : <ChevronDown size={20} className="text-zinc-500" />}
               </button>
               {expandedSections.images && (
                 <div className="mt-2 grid grid-cols-3 gap-2">
-                  {images.map((img, idx) => (
-                    <div key={idx} className="aspect-square rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800 cursor-pointer active:scale-95" onClick={() => setPreviewImage(getImageUrl(img.image_url))}>
-                      <img src={getImageUrl(img.image_url)} alt="" className="w-full h-full object-cover" />
-                    </div>
-                  ))}
+                  {images.map((img, idx) => {
+                    const url = getImageUrl(img.image_url);
+                    const isVideo = /\.(mp4|mov|avi|webm|3gp|mkv)$/i.test(img.image_url);
+                    return (
+                      <div key={idx} className="aspect-square rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800 cursor-pointer active:scale-95" onClick={() => isVideo ? setPreviewVideo(url) : setPreviewImage(url)}>
+                        {isVideo ? (
+                          <div className="relative w-full h-full">
+                            <video src={url} className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                              <Video size={24} className="text-white" />
+                            </div>
+                          </div>
+                        ) : (
+                          <img src={url} alt="" className="w-full h-full object-cover" />
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -722,13 +923,23 @@ const MaintenanceDetail = ({ recordId, onClose, userId }) => {
         </footer>
       </div>
 
-      {/* Image Preview */}
+      {/* Image/Video Preview */}
       {previewImage && (
         <div className="fixed inset-0 z-[100] bg-black flex items-center justify-center p-4" onClick={() => setPreviewImage(null)}>
           <button className="absolute top-6 right-6 w-12 h-12 rounded-xl bg-zinc-800 text-white flex items-center justify-center" onClick={() => setPreviewImage(null)}>
             <X size={24} />
           </button>
           <img src={previewImage} alt="" className="max-w-full max-h-[85vh] object-contain rounded-xl" onClick={(e) => e.stopPropagation()} />
+        </div>
+      )}
+
+      {/* Video Preview (full-screen) */}
+      {previewVideo && (
+        <div className="fixed inset-0 z-[100] bg-black flex items-center justify-center p-4" onClick={() => setPreviewVideo(null)}>
+          <button className="absolute top-6 right-6 w-12 h-12 rounded-xl bg-zinc-800 text-white flex items-center justify-center" onClick={() => setPreviewVideo(null)}>
+            <X size={24} />
+          </button>
+          <video src={previewVideo} className="max-w-full max-h-[85vh] rounded-xl" controls autoPlay onClick={(e) => e.stopPropagation()} />
         </div>
       )}
 

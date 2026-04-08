@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { CheckCircle2, Clock, AlertCircle, Wrench, List, PackageSearch, ChevronRight, Filter, XCircle, Pause } from 'lucide-react';
+import { CheckCircle2, Clock, AlertCircle, Wrench, List, PackageSearch, ChevronRight, Filter, XCircle, Pause, Camera } from 'lucide-react';
 import { maintenanceAPI } from '../services/api';
 import { formatThaiDate } from '../lib/utils';
 import MaintenanceDetail from './MaintenanceDetail';
@@ -161,6 +161,12 @@ const MaintenanceList = () => {
                       {getRelativeTime(record.created_at)}
                     </div>
                     {getSourceBadge(record)}
+                    {record.media_count > 0 && (
+                      <div className="text-xs text-sky-400 flex items-center gap-1">
+                        <Camera size={12} />
+                        {record.media_count}
+                      </div>
+                    )}
                   </div>
                   <div className="text-xs font-semibold text-green-400 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
                     View Details
