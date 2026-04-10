@@ -20,6 +20,7 @@ export interface Equipment {
   status?: string;
   is_active?: boolean;
   source?: string;
+  is_system?: boolean;
   maintenance_unit?: string;
   initial_usage?: number;
   current_usage?: number;

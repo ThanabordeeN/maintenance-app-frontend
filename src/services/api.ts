@@ -102,6 +102,17 @@ export const equipmentAPI = {
     }
     return response.json();
   },
+
+  syncFleetVehicles: async (): Promise<{ success: boolean; synced: number; total: number }> => {
+    const response = await authenticatedFetch(`${API_URL}/maintenance/sync-fleet-vehicles`, {
+      method: 'POST',
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to sync fleet vehicles');
+    }
+    return response.json();
+  },
 };
 
 // Maintenance Records API

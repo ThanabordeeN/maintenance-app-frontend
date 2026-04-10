@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Pencil, Trash2, X, Search, Package, CheckCircle, AlertTriangle, RefreshCcw, Calendar, Power, Wrench, Clock, MapPin, HelpCircle, ChevronRight, Eye, Settings2, Zap } from 'lucide-react';
+import { Plus, Pencil, Trash2, X, Search, Package, CheckCircle, AlertTriangle, RefreshCcw, Calendar, Power, Wrench, Clock, MapPin, HelpCircle, ChevronRight, Eye, Settings2, Zap, Truck, RefreshCw } from 'lucide-react';
 import { equipmentAPI } from '../services/api';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/Card';
 import Button from './ui/Button';
@@ -42,6 +42,9 @@ const EquipmentManagement = ({ profile }) => {
   const [showMaintenanceForm, setShowMaintenanceForm] = useState(false);
   const [maintenanceInitialData, setMaintenanceInitialData] = useState(null);
 
+  // Fleet vehicles sync state
+  const [isSyncingFleet, setIsSyncingFleet] = useState(false);
+
   const handleRequestMaintenance = (schedule) => {
     setMaintenanceInitialData({
       equipmentId: selectedEquipment.equipment_id,
@@ -62,6 +65,10 @@ const EquipmentManagement = ({ profile }) => {
     { value: 'motor', label: 'มอเตอร์', icon: '🔌' },
     { value: 'generator', label: 'เครื่องปั่นไฟ', icon: '⚡' },
     { value: 'compressor', label: 'เครื่องอัด', icon: '🌀' },
+    { value: 'mining_truck', label: 'รถเหมือง', icon: '🚛' },
+    { value: 'wheel_loader', label: 'รถตักล้อยาง', icon: '🚜' },
+    { value: 'excavator', label: 'รถขุด', icon: '⛏️' },
+    { value: 'dump_truck', label: 'รถบรรทุกหิน', icon: '🚚' },
     { value: 'other', label: 'อื่นๆ', icon: '📦' }
   ];
 
@@ -121,12 +128,33 @@ const EquipmentManagement = ({ profile }) => {
     return found?.icon || '📦';
   };
 
+  // Auto-sync fleet vehicles once on mount
+  useEffect(() => {
+    equipmentAPI.syncFleetVehicles().catch((e) =>
+      console.warn('Fleet vehicle sync skipped:', e.message)
+    );
+  }, []);
+
   useEffect(() => {
     fetchEquipment();
     // ซ่อน tips หลังจากผู้ใช้มีเครื่องจักร 3 ตัวขึ้นไป
     const hideTips = localStorage.getItem('hideEquipmentTips');
     if (hideTips) setShowTips(false);
   }, [filterActive]);
+
+  const handleSyncFleet = async () => {
+    setIsSyncingFleet(true);
+    try {
+      const result = await equipmentAPI.syncFleetVehicles();
+      await fetchEquipment();
+      alert(`ซิงค์สำเร็จ! พบรถ ${result.total} คัน อัปเดต ${result.synced} รายการ`);
+    } catch (err) {
+      console.error('Sync fleet error:', err);
+      alert('เกิดข้อผิดพลาดในการซิงค์: ' + err.message);
+    } finally {
+      setIsSyncingFleet(false);
+    }
+  };
 
   const fetchEquipment = async () => {
     try {
@@ -578,14 +606,30 @@ const EquipmentManagement = ({ profile }) => {
         )}
       </div>
 
-      {/* Add Equipment Button - Large & Prominent */}
-      <Button
-        onClick={openCreateModal}
-        className="w-full py-6 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-lg font-semibold rounded-xl shadow-lg shadow-blue-500/20"
-      >
-        <Plus className="w-6 h-6 mr-2" />
-        เพิ่มเครื่องจักรใหม่
-      </Button>
+      {/* Action Buttons */}
+      <div className="flex gap-3">
+        <Button
+          onClick={openCreateModal}
+          className="flex-1 py-6 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-lg font-semibold rounded-xl shadow-lg shadow-blue-500/20"
+        >
+          <Plus className="w-6 h-6 mr-2" />
+          เพิ่มเครื่องจักรใหม่
+        </Button>
+        {['admin', 'supervisor'].includes(profile?.role) && (
+          <Button
+            onClick={handleSyncFleet}
+            disabled={isSyncingFleet}
+            variant="ghost"
+            className="px-5 py-6 border border-indigo-500/40 text-indigo-400 hover:bg-indigo-500/10 hover:border-indigo-400 rounded-xl font-semibold disabled:opacity-50 whitespace-nowrap"
+            title="ซิงค์รถจากระบบ GPS"
+          >
+            {isSyncingFleet
+              ? <RefreshCw className="w-5 h-5 animate-spin mr-2" />
+              : <Truck className="w-5 h-5 mr-2" />}
+            ซิงค์รถ GPS
+          </Button>
+        )}
+      </div>
 
       {/* Equipment List */}
       <div className="space-y-3">
