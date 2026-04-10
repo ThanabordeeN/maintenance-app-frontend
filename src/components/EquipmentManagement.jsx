@@ -985,7 +985,13 @@ const EquipmentManagement = ({ profile }) => {
                             <input
                               type="number"
                               value={formData.maintenance_interval || ''}
-                              onChange={(e) => setFormData({ ...formData, maintenance_interval: e.target.value })}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                const schedules = formData.maintenance_schedules.length > 0
+                                  ? [{ ...formData.maintenance_schedules[0], interval_value: parseFloat(val) || val }, ...formData.maintenance_schedules.slice(1)]
+                                  : formData.maintenance_schedules;
+                                setFormData({ ...formData, maintenance_interval: val, maintenance_schedules: schedules });
+                              }}
                               placeholder={`แจ้งเตือนทุกๆ ... ${getMaintenanceUnitLabel(formData.maintenance_unit, false)}`}
                               className="flex-1 bg-gray-900 border border-gray-800 text-white px-4 py-3 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none"
                             />
