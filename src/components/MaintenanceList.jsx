@@ -8,12 +8,17 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/Card';
 import Button from './ui/Button';
 import Badge from './ui/Badge';
 
-const MaintenanceList = () => {
+const MaintenanceList = ({ openRecordId }) => {
   const { profile } = useLiff();
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [selectedRecordId, setSelectedRecordId] = useState(null);
+
+  // เปิด record จาก push notification หรือ bell click
+  useEffect(() => {
+    if (openRecordId) setSelectedRecordId(openRecordId);
+  }, [openRecordId]);
 
   const getRelativeTime = (dateString) => {
     const date = new Date(dateString);

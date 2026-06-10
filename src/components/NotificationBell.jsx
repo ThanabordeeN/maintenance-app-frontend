@@ -53,9 +53,19 @@ export default function NotificationBell({ profile, onViewChange, onSelectRecord
   useEffect(() => {
     if (userId) {
       quickCheck();
-      const interval = setInterval(quickCheck, 5000); // Every 5 seconds
+      const interval = setInterval(quickCheck, 5000);
       return () => clearInterval(interval);
     }
+  }, [userId]);
+
+  // อัพเดต bell ทันทีเมื่อ Service Worker รับ push
+  useEffect(() => {
+    if (!userId || !('serviceWorker' in navigator)) return;
+    const handler = (event) => {
+      if (event.data?.type === 'PUSH_RECEIVED') quickCheck();
+    };
+    navigator.serviceWorker.addEventListener('message', handler);
+    return () => navigator.serviceWorker.removeEventListener('message', handler);
   }, [userId]);
 
   // Full fetch when dropdown opens

@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { registerPush } from './hooks/usePushNotification';
 import { RefreshCcw, AlertTriangle, Ban, ClipboardCopy, Wrench, X, Plus, LogOut, ChevronLeft, Gauge, Crown, Shield, Eye } from 'lucide-react';
 import useLiff from './hooks/useLiff';
 import MaintenanceList from './components/MaintenanceList';
@@ -18,7 +19,32 @@ function App() {
   const [showForm, setShowForm] = useState(false);
   const [showUsageLog, setShowUsageLog] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [currentView, setCurrentView] = useState('maintenance'); // 'maintenance' or 'users'
+  const [currentView, setCurrentView] = useState('maintenance');
+  const [openRecordId, setOpenRecordId] = useState(null);
+
+  // Auto re-subscribe ถ้าเคย grant แล้ว (ไม่แสดง popup ซ้ำ)
+  useEffect(() => {
+    if (profile?.userId && Notification.permission === 'granted') {
+      registerPush(profile.userId).catch(() => {});
+    }
+  }, [profile?.userId]);
+
+  // อ่าน ?record=ID จาก URL (เปิดมาจาก push notification click)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const recordId = params.get('record');
+    if (recordId) {
+      setCurrentView('maintenance');
+      setOpenRecordId(recordId);
+      // ล้าง param ออกจาก URL โดยไม่ reload
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
+
+  const handleSelectRecord = (id) => {
+    setCurrentView('maintenance');
+    setOpenRecordId(id);
+  };
 
   const handleCreateSuccess = () => {
     setShowForm(false);
@@ -191,9 +217,10 @@ function App() {
         onLogout={logout}
         currentView={currentView}
         onViewChange={setCurrentView}
+        onSelectRecord={handleSelectRecord}
       />
 
-      <main className="container mx-auto px-4 py-8">
+<main className="container mx-auto px-4 py-8">
         {currentView === 'users' ? (
           // User Management View (Admin Only)
           profile.role === 'admin' ? (
@@ -300,7 +327,7 @@ function App() {
                 </button>
               </div>
 
-              <MaintenanceList key={refreshKey} />
+              <MaintenanceList key={refreshKey} openRecordId={openRecordId} />
 
               {/* Modal Maintenance Form */}
               {showForm && (
