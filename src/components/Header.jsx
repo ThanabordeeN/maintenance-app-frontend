@@ -21,7 +21,7 @@ import Button from './ui/Button';
 import Badge from './ui/Badge';
 import NotificationBell from './NotificationBell';
 
-const Header = ({ profile, onLogout, currentView, onViewChange }) => {
+const Header = ({ profile, onLogout, currentView, onViewChange, onSelectRecord }) => {
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -115,7 +115,7 @@ const Header = ({ profile, onLogout, currentView, onViewChange }) => {
                   )}
 
                   {/* Notifications Bell */}
-                  <NotificationBell profile={profile} onViewChange={onViewChange} />
+                  <NotificationBell profile={profile} onViewChange={onViewChange} onSelectRecord={onSelectRecord} />
                 </nav>
               )}
 
@@ -123,7 +123,7 @@ const Header = ({ profile, onLogout, currentView, onViewChange }) => {
                 <div className="flex items-center space-x-4">
                   {/* Mobile Notification Bell (Visible on mobile) */}
                   <div className="md:hidden">
-                    <NotificationBell profile={profile} onViewChange={onViewChange} />
+                    <NotificationBell profile={profile} onViewChange={onViewChange} onSelectRecord={onSelectRecord} />
                   </div>
 
                   <div className="hidden md:flex items-center gap-3">
